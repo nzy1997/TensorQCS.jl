@@ -3,6 +3,11 @@ uuid = "da12aa28-41b5-415a-b72f-86f814ffef72"
 authors = ["nzy1997"]
 version = "1.0.0-DEV"
 
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
+YaoToEinsum = "9b173c7b-dc24-4dc5-a0e1-adab2f7b6ba9"
+
 [compat]
 julia = "1.10"
 

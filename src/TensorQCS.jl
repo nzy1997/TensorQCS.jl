@@ -1,5 +1,11 @@
 module TensorQCS
+using YaoToEinsum
+using Yao
+using YaoToEinsum.OMEinsum
+using LinearAlgebra
+using Yao.YaoBlocks.Optimise
 
-# Write your package code here.
+export ComplexConj, SymbolRecorder, ein_circ
 
+include("qc2ein.jl")
 end
