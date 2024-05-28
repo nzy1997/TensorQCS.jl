@@ -9,13 +9,22 @@ Base.conj(x::ComplexConj) = content(x)
 Base.copy(x::ComplexConj) = ComplexConj(copy(content(x)))
 
 Base.conj(blk::ChainBlock{D}) where {D} =
-    ChainBlock(blk.n, AbstractBlock{D}[conj(b) for b in reverse(subblocks(blk))])
+    ChainBlock(blk.n, AbstractBlock{D}[conj(b) for b in subblocks(blk)])
 Base.conj(x::PutBlock) = PutBlock(nqudits(x), conj(content(x)), x.locs)
+
+Base.conj(blk::ControlBlock) =
+    ControlBlock(blk.n, blk.ctrl_locs, blk.ctrl_config, conj(blk.content), blk.locs)
 
 function YaoBlocks.map_address(blk::ComplexConj, info::AddressInfo)
     ComplexConj(YaoBlocks.map_address(content(blk), info))
 end
 YaoBlocks.Optimise.to_basictypes(block::ComplexConj) = ComplexConj(block.content)
+
+function YaoPlots.draw!(c::YaoPlots.CircuitGrid, p::ComplexConj{<:PrimitiveBlock}, address, controls)
+    bts = length(controls)>=1 ? YaoPlots.get_cbrush_texts(c, content(p)) : YaoPlots.get_brush_texts(c, content(p))
+    YaoPlots._draw!(c, [controls..., (getindex.(Ref(address), occupied_locs(p)), bts[1], "conj of "*bts[2])])
+end
+
 
 mutable struct SymbolRecorder{D} <: TrivialGate{D}
     symbol
@@ -36,6 +45,12 @@ function YaoToEinsum.add_gate!(eb::YaoToEinsum.EinBuilder{T}, b::PutBlock{D,C,Sy
     return eb
 end
 
+struct ConnectMap 
+    tr_qubits::Vector{Int}
+    ptr_qubits::Vector{Int}
+    nq::Int
+end
+
 function dm_circ!(qcf::ChainBlock, qc::ChainBlock)
     num_qubits = nqubits(qc)
     @assert 2 * num_qubits == nqubits(qcf)
@@ -48,77 +63,30 @@ function ein_circ(qc::ChainBlock, input_qubits::Vector{Int}, output_qubits::Vect
     num_qubits = nqubits(qc)
     qc_f = chain(2*num_qubits)
     srs = [SymbolRecorder() for _ in 1:2*(length(input_qubits)+length(output_qubits))]
-    srs_num = 1
-    for i in input_qubits
-        push!(qc_f, put(2*num_qubits, i => srs[srs_num]))
-        srs_num += 1
-        push!(qc_f, put(2*num_qubits, num_qubits+i => srs[srs_num]))
-        srs_num += 1
-    end
+    [push!(qc_f, put(2*num_qubits, input_qubits[i] => srs[2*i-1]), put(2*num_qubits, num_qubits+input_qubits[i] => srs[2*i])) for i in 1:length(input_qubits)]
 
     dm_circ!(qc_f, qc)
 
-    for i in output_qubits
-        push!(qc_f, put(2*num_qubits, i => srs[srs_num]))
-        srs_num += 1
-        push!(qc_f, put(2*num_qubits, num_qubits+i => srs[srs_num]))
-        srs_num += 1
-    end
+    [push!(qc_f, put(2*num_qubits, output_qubits[i] => srs[2*i-1+2*length(input_qubits)]), put(2*num_qubits, num_qubits+output_qubits[i] => srs[2*i+2*length(input_qubits)])) for i in 1:length(output_qubits)]
     return qc_f,srs
 end
 
-function old_ein_circ(qc::ChainBlock, data_qubits::Vector{Int}, num_qubits::Int)
-    data_qubit_num = length(data_qubits)
-    qc_f = chain(2*num_qubits)
-    srs = [SymbolRecorder() for i in 1:(2*data_qubit_num+2*num_qubits)]
-    srs_num = 1
-    for i in data_qubits
-        push!(qc_f, put(2*num_qubits, i => srs[srs_num]))
-        srs_num += 1
-    end
-
-    for i in data_qubits
-        push!(qc_f, put(2*num_qubits, num_qubits+i => srs[srs_num]))
-        srs_num += 1
-    end
-
-    dm_circ!(qc_f, qc)
-
-    for i in data_qubits
-        push!(qc_f, put(2*num_qubits, i => srs[srs_num]))
-        srs_num += 1
-    end
-
-    for i in data_qubits
-        push!(qc_f, put(2*num_qubits, num_qubits+i => srs[srs_num]))
-        srs_num += 1
-    end
-    for i in setdiff(1:num_qubits, data_qubits)
-        push!(qc_f, put(2*num_qubits, i => srs[srs_num]))
-        srs_num += 1
-    end
-    for i in setdiff(1:num_qubits, data_qubits)
-        push!(qc_f, put(2*num_qubits, num_qubits+i => srs[srs_num]))
-        srs_num += 1
-    end
-    return qc_f,srs
+function ein_circ(qc::ChainBlock, cm::ConnectMap)
+    return ein_circ(qc, cm.tr_qubits, cm.tr_qubits ∪ cm.ptr_qubits)
 end
 
 mapr(a::SymbolRecorder, b::SymbolRecorder) = a.symbol => b.symbol
-function qc2enisum(qc::ChainBlock,srs::Vector{SymbolRecorder{D}},data_qubits::Vector{Int},num_qubits::Int) where D
-    ein_code = yao2einsum(qc;initial_state=Dict(x=>0 for x in setdiff(setdiff(1:2*num_qubits, data_qubits), num_qubits .+ data_qubits)), optimizer=nothing)
-    data_qubit_num = length(data_qubits)
+function qc2enisum(qc::ChainBlock,zero_qubits::Vector{Int}, replace_dict::Dict{Int, Int})
+    ein_code = yao2einsum(qc;initial_state=Dict(x=>0 for x in zero_qubits), optimizer=nothing)
+    jointcode = replace(ein_code.code, replace_dict)
+    empty!(jointcode.iy) 
+    return TensorNetwork(jointcode, ein_code.tensors)
+end
 
-    ds1 = 1:data_qubit_num
-    ds2 = 2*data_qubit_num+1:3*data_qubit_num
-    ds3 = data_qubit_num+1:2*data_qubit_num
-    ds4 = 3*data_qubit_num+1:4*data_qubit_num
-    anc1 =  4*data_qubit_num+1:num_qubits-data_qubit_num+4*data_qubit_num 
-    anc2 = num_qubits+3*data_qubit_num+1:2*num_qubits+2*data_qubit_num
-    jointcode = replace(ein_code.code, 
-        mapr.(srs[ds1], srs[ds2])..., 
-        mapr.(srs[ds3], srs[ds4])..., 
-        mapr.(srs[anc1], srs[anc2])...)
+function qc2enisum(qc::ChainBlock, srs::Vector{SymbolRecorder{D}}, cm::ConnectMap) where D
+    ein_code = yao2einsum(qc;initial_state=Dict(x=>0 for x in cm.ptr_qubits ∪ (cm.ptr_qubits.+cm.nq)), optimizer=nothing)
+    replace_dict = ([[srs[2*i-1].symbol => srs[2*length(cm.tr_qubits)+2*i-1].symbol  for i in 1:length(cm.tr_qubits)]...,[srs[2*i].symbol => srs[2*length(cm.tr_qubits)+2*i].symbol  for i in 1:length(cm.tr_qubits)]...,[srs[4*length(cm.tr_qubits)+2*i-1].symbol => srs[4*length(cm.tr_qubits)+2*i].symbol for i in 1:length(cm.ptr_qubits)]...])
+    jointcode = replace(ein_code.code, replace_dict...)
     empty!(jointcode.iy) 
     return TensorNetwork(jointcode, ein_code.tensors)
 end

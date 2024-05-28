@@ -1,6 +1,6 @@
 using TensorQCS
 using Test
 
-@testset "TensorQCS.jl" begin
-    # Write your tests here.
+@testset "qc2ein.jl" begin
+   include("qc2ein.jl") 
 end
