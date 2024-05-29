@@ -4,9 +4,11 @@ end
 ComplexConj(x::BT) where {D,BT<:AbstractBlock{D}} = ComplexConj{BT,D}(x)
 Yao.mat(::Type{T}, blk::ComplexConj) where {T} = conj(mat(T, content(blk)))
 
+Base.conj(x::Union{XGate, ZGate}) = x
 Base.conj(x::AbstractBlock) = ComplexConj(x)
 Base.conj(x::ComplexConj) = content(x)
 Base.copy(x::ComplexConj) = ComplexConj(copy(content(x)))
+YaoBlocks.chsubblocks(blk::ComplexConj, target::AbstractBlock) = ComplexConj(target)
 
 Base.conj(blk::ChainBlock{D}) where {D} =
     ChainBlock(blk.n, AbstractBlock{D}[conj(b) for b in subblocks(blk)])

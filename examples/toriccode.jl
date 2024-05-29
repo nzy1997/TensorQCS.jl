@@ -29,10 +29,13 @@ function toric_code_cir(codesize::Int)
     push!(qcf, subroutine(num_qubits, qcen', 1:data_qubit_num))
     return simplify(qcf; rules=[to_basictypes, Optimise.eliminate_nested]), data_qubits, num_qubits
 end
-qc, data_qubits, num_qubits = toric_code_cir(2)
+qc, data_qubits, num_qubits = toric_code_cir(3)
 
-cm = ConnectMap(data_qubits, setdiff(1:num_qubits,data_qubits), 2)
+cm = ConnectMap(data_qubits, setdiff(1:num_qubits,data_qubits), num_qubits)
 qcf, srs = ein_circ(qc, cm)
 tn = qc2enisum(qcf, srs, cm)
 optnet = optimize_code(tn, TreeSA(), OMEinsum.MergeVectors())
 contract(optnet)[1]
+
+YaoPlots.CircuitStyles.r[] = 0.3
+vizcircuit(qc; starting_texts = 1:num_qubits, filename = "ToricCode.svg")
