@@ -12,50 +12,60 @@ function shor_code_cir()
 	qcen = chain(9, put(9, 9 => H), qcen)
 	data_qubit_num = size(code.matrix, 2) ÷ 2
 	st_me = TensorQEC.stabilizers(ShorCode(), linearly_independent = false)
-	qcm, st_pos, num_qubits = measure_circuit(st_me)
+	qcm, st_pos, num_qubits = measure_circuit_steane(qcen,st_me,2)
 
 	qccr = chain(
 		num_qubits,
-		control(num_qubits, (10, 11), 1 => Z),
-		control(num_qubits, (10, 12), 4 => Z),
-		control(num_qubits, (11, 12), 7 => Z),
-		control(num_qubits, (13, 14), 1 => X),
-		control(num_qubits, (13, 15), 2 => X),
-		control(num_qubits, (14, 15), 3 => X),
-		control(num_qubits, (16, 17), 4 => X),
-		control(num_qubits, (16, 18), 5 => X),
-		control(num_qubits, (17, 18), 6 => X),
-		control(num_qubits, (19, 20), 7 => X),
-		control(num_qubits, (19, 21), 8 => X),
-		control(num_qubits, (20, 21), 9 => X),
+		control(num_qubits, (st_pos[1], st_pos[2]), 1 => Z),
+		control(num_qubits, (st_pos[1], st_pos[3]), 4 => Z),
+		control(num_qubits, (st_pos[2], st_pos[3]), 7 => Z),
+		control(num_qubits, (st_pos[4], st_pos[5]), 1 => X),
+		control(num_qubits, (st_pos[4], st_pos[6]), 2 => X),
+		control(num_qubits, (st_pos[5], st_pos[6]), 3 => X),
+		control(num_qubits, (st_pos[7], st_pos[8]), 4 => X),
+		control(num_qubits, (st_pos[7], st_pos[9]), 5 => X),
+		control(num_qubits, (st_pos[8], st_pos[9]), 6 => X),
+		control(num_qubits, (st_pos[10], st_pos[11]), 7 => X),
+		control(num_qubits, (st_pos[10], st_pos[12]), 8 => X),
+		control(num_qubits, (st_pos[11], st_pos[12]), 9 => X),
 	)
 
 	qcf = chain(num_qubits)
 	push!(qcf, subroutine(num_qubits, qcen, 1:data_qubit_num))
-	# for i in 1:codesize
-	#     push!(qcf, put(num_qubits, i => X))
-	# end 
+
+	push!(qcf, put(num_qubits, 1 => Z))
+    push!(qcf, put(num_qubits, 4 => Z))
+    push!(qcf, put(num_qubits, 7 => Z))
+
 	push!(qcf, qcm)
 	push!(qcf, qccr)
 	push!(qcf, subroutine(num_qubits, qcen', 1:data_qubit_num))
 	return simplify(qcf; rules = [to_basictypes, Optimise.eliminate_nested]), data_qubits, num_qubits
 end
 
-# function error_compare(qc::ChainBlock, error_rate::ChainBlock)
-qc, data_qubits, num_qubits = shor_code_cir()
-qce, vec = error_quantum_circuit(qc, 1e-5)
-qce = chain(num_qubits, put(num_qubits, data_qubits[1] => X), qce)
-qc = chain(num_qubits, put(num_qubits, data_qubits[1] => X), qc)
+function error_tensornetwork(qc::ChainBlock, error_rate::Real,num_qubits::Int, data_qubits::Vector{Int})
+    qce, vec = error_quantum_circuit(qc, error_rate)
+    qce = chain(num_qubits, put(num_qubits, data_qubits[1] => X), qce)
 
-cm = ConnectMap(setdiff(1:num_qubits, data_qubits), data_qubits, num_qubits)
-qcf, srs = ein_circ(qce, cm)
-tn = qc2enisum(qcf, srs, cm)
-optnet = optimize_code(tn, TreeSA(), OMEinsum.MergeVectors())
-# return contract(optnet)[1]
-# end
-qce, vec = error_quantum_circuit(qcf, 1e-5)
-tne = qc2enisum(qce, srs, cm)
-optnet = optimize_code(tne, TreeSA(), OMEinsum.MergeVectors())
+    cm = ConnectMap(data_qubits,setdiff(1:num_qubits, data_qubits), num_qubits)
+    qcf, srs = ein_circ(qce, cm)
+    tn = qc2enisum(qcf, srs, cm)
+    return tn, vec
+end
+
+function error_infidelity(error_rates::Vector{Float64})
+    qc, data_qubits, num_qubits = shor_code_cir()
+    tn,vec = error_tensornetwork(qc, error_rates[1], num_qubits, data_qubits)
+    optnet = optimize_code(tn, TreeSA(), OMEinsum.MergeVectors()) 
+    for error_rate in error_rates
+        tn,vec = error_tensornetwork(qc, error_rate, num_qubits, data_qubits)
+        # optnet = optimize_code(tn, TreeSA(), OMEinsum.MergeVectors())
+        inf = 1-abs(contract(TensorNetwork(optnet.code,tn.tensors))[1]/4)
+        @show inf
+        @show vec
+    end
+end   
+error_infidelity([1e-8,1e-7,1e-6,1e-5,1e-4,1e-3])
 
 YaoPlots.CircuitStyles.r[] = 0.3
 vizcircuit(qcf; starting_texts = 1:2*num_qubits, filename = "ToricCode.svg")
@@ -81,4 +91,9 @@ function shor_code_play()
 	@show fidelity(reg0, reg)
 	@show fidelity(reg1, reg)
 	@show abs.(regrs.state)
+
+    qc, data_qubits, num_qubits = shor_code_cir()
+    reg21 = join(regrs, zero_state(20)) 
+    regf = apply(reg21, qc)
+    fidelity(regf, reg21)
 end

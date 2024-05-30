@@ -34,7 +34,6 @@ end
     qce,vec = error_quantum_circuit(qc, 1e-5)
     qce = chain(num_qubits, put(num_qubits,data_qubits[1]=>X),qce)
     qc = chain(num_qubits, put(num_qubits,data_qubits[1]=>X),qc)
-
     cm = ConnectMap(setdiff(1:num_qubits,data_qubits),data_qubits, num_qubits)
     qcf, srs = ein_circ(qce, cm)
     tn = qc2enisum(qcf, srs, cm)

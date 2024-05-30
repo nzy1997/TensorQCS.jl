@@ -24,9 +24,9 @@ toput(gate::ControlBlock{XGate,2,1}) = put(nqudits(gate), (gate.ctrl_locs..., ga
 toput(gate::ControlBlock{ZGate,2,1}) = put(nqudits(gate), (gate.ctrl_locs..., gate.locs...)=>CCZ)
 toput(gate::AbstractBlock) = gate
 
-function error_quantum_circuit(qc::ChainBlock, error_rate::Real) 
+function error_quantum_circuit(qc::ChainBlock, error_rate::T ) where {T <: Real}
     qcf = replace_block(x->toput(x), qc)
-    vec = []
+    vec = Vector{T}()
     pairs = [x => matblock(coherent_error_unitary(mat(x),error_rate;cache =vec)) for x in [X,Z,H,CCZ,CCX,ConstGate.CNOT,ConstGate.CZ]]
     for pa in pairs
         qcf = replace_block(pa, qcf)
