@@ -17,12 +17,13 @@ end
     qc = chain(3, put(3, 1 => X), put(3, 2 => Y), put(3, 3 => Z), control(3, 2, 3 => X), control(3, (1,3), 2 => Z), control(3, 1, 3 => Z))
     qcf, srs = ein_circ(qc, ConnectMap([], [], 3))
     qc2 = replace_block(x->toput(x), qcf)
-    @test qc2.blocks[1].content.blocks[5].content == CCZ
+    @test qc2.blocks[5].content == CCZ
 end
 
 @testset "error_quantum_circuit" begin
-    qc = chain(3, put(3, 1 => X), put(3, 2 => Y), put(3, 3 => Z), control(3, 2, 3 => X), control(3, (1,3), 2 => Z), control(3, 1, 3 => Z))
+    qc = chain(3, put(3, 1 => X), put(3, 2 => H), put(3, 3 => Z), control(3, 2, 3 => X), control(3, (1,3), 2 => Z), control(3, 1, 3 => Z))
     qc, srs = ein_circ(qc, ConnectMap([], [], 3))
     qce,maxe = error_quantum_circuit(qc ,1e-5) 
+    @show qce
     @show 1-abs(tr(mat(qc)'*mat(qce)))/2^6
 end

@@ -53,6 +53,13 @@ struct ConnectMap
     nq::Int
 end
 
+function dm_circ(qc::ChainBlock)
+    num_qubits = nqubits(qc)
+    qcf = chain(2*num_qubits)
+    dm_circ!(qcf, qc)
+    return qcf
+end
+
 function dm_circ!(qcf::ChainBlock, qc::ChainBlock)
     num_qubits = nqubits(qc)
     @assert 2 * num_qubits == nqubits(qcf)
@@ -61,16 +68,20 @@ function dm_circ!(qcf::ChainBlock, qc::ChainBlock)
     return qcf
 end
 
-function ein_circ(qc::ChainBlock, input_qubits::Vector{Int}, output_qubits::Vector{Int})
-    num_qubits = nqubits(qc)
+function ein_circ(qc::ChainBlock, input_qubits::Vector{Int}, output_qubits::Vector{Int}, num_qubits::Int)
     qc_f = chain(2*num_qubits)
     srs = [SymbolRecorder() for _ in 1:2*(length(input_qubits)+length(output_qubits))]
     [push!(qc_f, put(2*num_qubits, input_qubits[i] => srs[2*i-1]), put(2*num_qubits, num_qubits+input_qubits[i] => srs[2*i])) for i in 1:length(input_qubits)]
 
-    dm_circ!(qc_f, qc)
-
+    push!(qc_f,qc)
+    
     [push!(qc_f, put(2*num_qubits, output_qubits[i] => srs[2*i-1+2*length(input_qubits)]), put(2*num_qubits, num_qubits+output_qubits[i] => srs[2*i+2*length(input_qubits)])) for i in 1:length(output_qubits)]
-    return qc_f,srs
+    return simplify(qc_f; rules=[to_basictypes, Optimise.eliminate_nested]),srs
+end
+
+function ein_circ(qc::ChainBlock, input_qubits::Vector{Int}, output_qubits::Vector{Int})
+    num_qubits = nqubits(qc)
+    return ein_circ(dm_circ(qc), input_qubits, output_qubits, num_qubits)
 end
 
 function ein_circ(qc::ChainBlock, cm::ConnectMap)

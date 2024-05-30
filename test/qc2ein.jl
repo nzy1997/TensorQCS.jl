@@ -34,10 +34,8 @@ end
     ein_code = yao2einsum(qcf;optimizer=nothing)
 end
 
-function get_kraus(u::AbstractMatrix{T}, nancilla::Int) where T
-    ndata = Yao.log2i(size(u, 1)) - nancilla
-    # return permutedims(reshape(u, (2^ndata, 2^nancilla, 2^ndata, 2^nancilla)), (1, 3, 2, 4))[:,:,:,1]
-    return [u[i*2^ndata+1:(i+1)*2^ndata,1:2^ndata] for i in 0:2^nancilla-1]
+function get_kraus(u::AbstractMatrix{T}, ndata::Int) where T
+    return [u[i*2^ndata+1:(i+1)*2^ndata,1:2^ndata] for i in 0:2^(Yao.log2i(size(u, 1))-ndata)-1]
 end
 
 @testset "qc2enisum" begin
