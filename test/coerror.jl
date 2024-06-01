@@ -25,5 +25,5 @@ end
     qc, srs = ein_circ(qc, ConnectMap([], [], 3))
     qce,maxe = error_quantum_circuit(qc ,1e-5) 
     @show qce
-    @show 1-abs(tr(mat(qc)'*mat(qce)))/2^6
+    @test isapprox(1-abs(tr(mat(qc)'*mat(qce)))/2^6,0; atol=1e-5)
 end

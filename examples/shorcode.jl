@@ -12,7 +12,7 @@ function shor_code_cir()
 	qcen = chain(9, put(9, 9 => H), qcen)
 	data_qubit_num = size(code.matrix, 2) ÷ 2
 	st_me = TensorQEC.stabilizers(ShorCode(), linearly_independent = false)
-	qcm, st_pos, num_qubits = measure_circuit_steane(qcen,st_me,2)
+	qcm, st_pos, num_qubits = measure_circuit_steane(qcen,st_me,3)
 
 	qccr = chain(
 		num_qubits,
@@ -71,29 +71,3 @@ YaoPlots.CircuitStyles.r[] = 0.3
 vizcircuit(qcf; starting_texts = 1:2*num_qubits, filename = "ToricCode.svg")
 
 
-function shor_code_play()
-	st = TensorQEC.stabilizers(ShorCode())
-	qcen, data_qubits, code = TensorQEC.encode_stabilizers(st)
-	qcen = chain(9, put(9, 9 => H), qcen)
-
-	reg0 = zero_state(9)
-	apply!(reg0, qcen)
-
-	reg1 = zero_state(9)
-	apply!(reg1, put(9, 9 => X))
-	apply!(reg1, qcen)
-
-	fidelity(reg0, reg1)
-	regrs = rand_state(1)
-	reg = join(regrs, zero_state(8))
-	apply!(reg, qcen)
-
-	@show fidelity(reg0, reg)
-	@show fidelity(reg1, reg)
-	@show abs.(regrs.state)
-
-    qc, data_qubits, num_qubits = shor_code_cir()
-    reg21 = join(regrs, zero_state(20)) 
-    regf = apply(reg21, qc)
-    fidelity(regf, reg21)
-end
