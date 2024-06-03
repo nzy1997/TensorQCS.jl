@@ -30,7 +30,7 @@ function error_quantum_circuit(qc::ChainBlock, error_rate::T ) where {T <: Real}
     return qcf, vec
 end
 
-function error_quantum_circuit(qc::ChainBlock, pairs)
+function error_quantum_circuit(qc::ChainBlock, pairs::Vector{Pair{AbstractBlock,AbstractBlock}})
     qcf = replace_block(x->toput(x), qc)
     for pa in pairs
         qcf = replace_block(pa, qcf)

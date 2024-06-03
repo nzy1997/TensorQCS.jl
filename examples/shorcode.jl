@@ -31,16 +31,16 @@ function shor_code_cir()
 	)
 
 	qcf = chain(num_qubits)
-	push!(qcf, subroutine(num_qubits, qcen, 1:data_qubit_num))
+	# push!(qcf, subroutine(num_qubits, qcen, 1:data_qubit_num))
 
-	push!(qcf, put(num_qubits, 1 => Z))
-    push!(qcf, put(num_qubits, 4 => Z))
-    push!(qcf, put(num_qubits, 7 => Z))
+	# push!(qcf, put(num_qubits, 1 => Z))
+    # push!(qcf, put(num_qubits, 4 => Z))
+    # push!(qcf, put(num_qubits, 7 => Z))
 
 	push!(qcf, qcm)
 	push!(qcf, qccr)
-	push!(qcf, subroutine(num_qubits, qcen', 1:data_qubit_num))
-	return simplify(qcf; rules = [to_basictypes, Optimise.eliminate_nested]), data_qubits, num_qubits
+	# push!(qcf, subroutine(num_qubits, qcen', 1:data_qubit_num))
+	return simplify(qcf; rules = [to_basictypes, Optimise.eliminate_nested]), data_qubits, num_qubits,qcen
 end
 
 function error_tensornetwork(qc::ChainBlock, error_rate::Real,num_qubits::Int, data_qubits::Vector{Int})
@@ -54,7 +54,7 @@ function error_tensornetwork(qc::ChainBlock, error_rate::Real,num_qubits::Int, d
 end
 
 function error_infidelity(error_rates::Vector{Float64})
-    qc, data_qubits, num_qubits = shor_code_cir()
+    qc, data_qubits, num_qubits,qcen = shor_code_cir()
     tn,vec = error_tensornetwork(qc, error_rates[1], num_qubits, data_qubits)
     optnet = optimize_code(tn, TreeSA(), OMEinsum.MergeVectors()) 
     for error_rate in error_rates
@@ -71,3 +71,12 @@ YaoPlots.CircuitStyles.r[] = 0.3
 vizcircuit(qcf; starting_texts = 1:2*num_qubits, filename = "ToricCode.svg")
 
 
+qc, data_qubits, num_qubits ,qcen= shor_code_cir()
+cm = ConnectMap(data_qubits,setdiff(1:69, data_qubits), 69)
+qc2 = chain(69,subroutine(69,qcen,1:9),subroutine(69,qc,1:39),subroutine(69,qc,(1:9) ∪ (40:69)),subroutine(69,qcen',1:9))
+qc2 = simplify(qc2; rules = [to_basictypes, Optimise.eliminate_nested])
+qcf, srs = ein_circ(qc2, cm)
+
+tn = qc2enisum(qcf, srs, cm)
+optnet = optimize_code(tn, TreeSA(), OMEinsum.MergeVectors()) 
+inf = 1-abs(contract(TensorNetwork(optnet.code,tn.tensors))[1]/4)

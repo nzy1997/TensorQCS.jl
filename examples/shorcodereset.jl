@@ -61,6 +61,7 @@ function reset_shor_circuit()
 	push!(qc, Measure(num_qubits; locs = 10:18, resetto = bit"000000000"))
 	return qc, qcen
 end
+
 qc, qcen = reset_shor_circuit()
 vizcircuit(qc)
 pairs,vector = error_pairs(1e-5) 
@@ -70,16 +71,26 @@ eqcen = error_quantum_circuit(qcen,pairs)
 regrs = rand_state(1)
 reg = join(zero_state(12), regrs, zero_state(8))
 infs = []
-for i in 1:1000
+for i in 1:100
 	apply!(reg, subroutine(eqcen, 1:9))
 	apply!(reg, eqc)
     apply!(reg, eqc)
 	apply!(reg, subroutine(eqcen', 1:9))
-    inf = 1-fidelity(reg, join(zero_state(12), regrs, zero_state(8))) 
+    inf = 1 - fidelity(reg, join(zero_state(12), regrs, zero_state(8))) 
 	@show i, inf
     push!(infs,inf)
 end
 
+# Error X without correction
+reg1 = copy(regrs)
+infs = []
+for i in 1:100000
+	apply!(reg1, pairs[1].second)
+	apply!(reg1, pairs[1].second)
+    inf = 1 - fidelity(reg1, regrs) 
+	@show i, inf
+    push!(infs,inf)
+end
 
 using Test
 @testset "reset_shor_circuit" begin
