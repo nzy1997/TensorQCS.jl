@@ -27,3 +27,11 @@ end
     @show qce
     @test isapprox(1-abs(tr(mat(qc)'*mat(qce)))/2^6,0; atol=1e-5)
 end
+
+@testset "add_indentity" begin
+    qc = chain(3,control(3, 2,1 => X), put(3, 2 => X), put(3, 3 => Y), put(3, 1 => Z))
+    qcn,idrs = add_indentity(qc, [1,2])
+    tn = yao2einsum(qcn)
+    @test length(idrs) == 6
+    @test tn.tensors[idrs[3].symbol] == ComplexF64[[1 0];[0 1]]
+end

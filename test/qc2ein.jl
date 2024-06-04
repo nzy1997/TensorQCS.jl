@@ -25,6 +25,19 @@ end
     @test srs[3].symbol == 5
 end
 
+@testset "IdentityRecorder" begin
+    reg = rand_state(1)
+    sr = IdentityRecorder()
+    @test apply!(reg, sr) == reg
+
+    srs = [IdentityRecorder() for i in 1:3]
+    qc = chain(3,put(3, 1 => srs[1]), put(3, 2 => X), put(3, 3 => Y), put(3, 1 => Z), put(3, 2 => srs[2]), put(3, 3 => srs[3]))
+    tn = yao2einsum(qc)
+    @test srs[1].symbol == 1
+    @test srs[2].symbol == 5
+    @test srs[3].symbol == 6
+end
+
 @testset "ein_circ" begin
     u1 = mat(X)
     toyqc = chain(2, put(2,1 => GeneralMatrixBlock(u1; nlevel=2, tag="X")))

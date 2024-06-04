@@ -68,15 +68,42 @@ end
 error_infidelity([1e-8,1e-7,1e-6,1e-5,1e-4,1e-3])
 
 YaoPlots.CircuitStyles.r[] = 0.3
-vizcircuit(qcf; starting_texts = 1:2*num_qubits, filename = "ToricCode.svg")
+vizcircuit(qcf; starting_texts = 1:nqubits(qcf), filename = "ToricCode_2.svg")
 
-
-qc, data_qubits, num_qubits ,qcen= shor_code_cir()
-cm = ConnectMap(data_qubits,setdiff(1:69, data_qubits), 69)
-qc2 = chain(69,subroutine(69,qcen,1:9),subroutine(69,qc,1:39),subroutine(69,qc,(1:9) ∪ (40:69)),subroutine(69,qcen',1:9))
-qc2 = simplify(qc2; rules = [to_basictypes, Optimise.eliminate_nested])
-qcf, srs = ein_circ(qc2, cm)
-
+function two_rounds_circuit()
+	qc, data_qubits, num_qubits ,qcen= shor_code_cir()
+	cm = ConnectMap(data_qubits,setdiff(1:69, data_qubits), 69)
+	qc2 = chain(69,subroutine(69,qcen,1:9),subroutine(69,qc,1:39),subroutine(69,qc,(1:9) ∪ (40:69)),subroutine(69,qcen',1:9))
+	qc2 = simplify(qc2; rules = [to_basictypes, Optimise.eliminate_nested])
+	qcf, srs = ein_circ(qc2, cm)
+	qcf, idrs = add_indentity(qcf, collect(1:39))
+	return qcf, srs, idrs,cm
+end
+qcf, srs, idrs,cm = two_rounds_circuit()
 tn = qc2enisum(qcf, srs, cm)
 optnet = optimize_code(tn, TreeSA(), OMEinsum.MergeVectors()) 
 inf = 1-abs(contract(TensorNetwork(optnet.code,tn.tensors))[1]/4)
+
+cost, gradient = OMEinsum.cost_and_gradient(optnet.code, (optnet.tensors...,))
+
+ansvec = [gradient[i.symbol]*optnet.tensors[i.symbol]'-optnet.tensors[i.symbol]*gradient[i.symbol]' for i in idrs]
+abssum = (x->sum(abs.(x))).(ansvec)
+
+function show_indices(qc::ChainBlock, srsnum::Int)
+	qc = simplify(qc; rules = [to_basictypes, Optimise.eliminate_nested])
+	qc2 = TensorQCS.dm_circ(qc::ChainBlock)
+	qc2 = simplify(qc2; rules = [to_basictypes, Optimise.eliminate_nested])
+	qcn = chain(2*nqubits(qc))
+	srs = [SymbolRecorder() for _ in 1:srsnum]
+	srscount = 1
+	for gate in qc2
+		push!(qcn, gate)
+		for i in toput(gate).locs
+			push!(qcn, put(2*nqubits(qc), i => srs[srscount]))
+			srscount += 1
+		end
+	end
+	return qcn,srs
+end
+
+qcs, srss = show_indices(qc2, 1200)

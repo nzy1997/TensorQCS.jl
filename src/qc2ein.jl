@@ -27,14 +27,25 @@ function YaoPlots.draw!(c::YaoPlots.CircuitGrid, p::ComplexConj{<:PrimitiveBlock
     YaoPlots._draw!(c, [controls..., (getindex.(Ref(address), occupied_locs(p)), bts[1], "conj of "*bts[2])])
 end
 
+abstract type AbstractRecoder{D} <: TrivialGate{D} end
 
-mutable struct SymbolRecorder{D} <: TrivialGate{D}
+mutable struct IdentityRecorder{D} <: AbstractRecoder{D}
     symbol
 end
 
+mutable struct SymbolRecorder{D} <: AbstractRecoder{D}
+    symbol
+end
+
+IdentityRecorder(; nlevel=2) = IdentityRecorder{nlevel}(nothing)
 SymbolRecorder(; nlevel=2) = SymbolRecorder{nlevel}(nothing)
-Yao.nqudits(sr::SymbolRecorder) = 1
-Yao.print_block(io::IO, sr::SymbolRecorder) = print(io, sr.symbol)
+Yao.nqudits(sr::AbstractRecoder) = 1
+Yao.print_block(io::IO, sr::AbstractRecoder) = print(io, sr.symbol)
+
+function YaoPlots.draw!(c::YaoPlots.CircuitGrid, p::IdentityRecorder, address, controls)
+    @assert length(controls) == 0
+    YaoPlots._draw!(c, [(getindex.(Ref(address), (1,)), c.gatestyles.g, "I$(p.symbol)")])
+end
 
 function YaoPlots.draw!(c::YaoPlots.CircuitGrid, p::SymbolRecorder, address, controls)
     @assert length(controls) == 0
@@ -44,6 +55,18 @@ end
 function YaoToEinsum.add_gate!(eb::YaoToEinsum.EinBuilder{T}, b::PutBlock{D,C,SymbolRecorder{D}}) where {T,D,C}
     lj = eb.slots[b.locs[1]]
     b.content.symbol = lj
+    return eb
+end
+
+function YaoToEinsum.add_gate!(eb::YaoToEinsum.EinBuilder{T}, b::PutBlock{D,C,IdentityRecorder{D}}) where {T,D,C}
+    b.content.symbol = length(eb.tensors)+1
+    # return YaoToEinsum.add_matrix!(eb, 1, T[[1 0]; [0 1]], [b.locs[1]])
+    m = T[[1 0]; [0 1]]
+    k = 1 
+    locs = [b.locs[1]] 
+    nlabels = [YaoToEinsum.newlabel!(eb) for _=1:k]
+    YaoToEinsum.add_tensor!(eb, reshape(Matrix{T}(m), fill(2, 2k)...), [nlabels..., eb.slots[locs]...])
+    eb.slots[locs] .= nlabels
     return eb
 end
 

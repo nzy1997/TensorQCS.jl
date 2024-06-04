@@ -30,7 +30,7 @@ function error_quantum_circuit(qc::ChainBlock, error_rate::T ) where {T <: Real}
     return qcf, vec
 end
 
-function error_quantum_circuit(qc::ChainBlock, pairs::Vector{Pair{AbstractBlock,AbstractBlock}})
+function error_quantum_circuit(qc::ChainBlock, pairs)
     qcf = replace_block(x->toput(x), qc)
     for pa in pairs
         qcf = replace_block(pa, qcf)
@@ -42,4 +42,31 @@ function error_pairs(error_rate::T) where {T <: Real}
     vec = Vector{T}()
     pairs = [x => matblock(coherent_error_unitary(mat(x),error_rate;cache =vec)) for x in [X,Z,H,CCZ,CCX,ConstGate.CNOT,ConstGate.CZ]]
     return pairs, vec
+end
+
+function add_indentity(qc::ChainBlock, qubits::Vector{Int})
+	qc = simplify(qc; rules = [to_basictypes, Optimise.eliminate_nested])
+    nq = nqubits(qc)
+	qcn = chain(nq)
+	idrs = []
+    for i in 1:nq
+        if i ∈ qubits
+            idr = IdentityRecorder()
+            push!(idrs,idr)
+            push!(qcn, put(nq, i => idr))
+        end
+    end
+	for gate in qc
+		push!(qcn, gate)
+        if !(toput(gate).content isa TrivialGate)
+            for i in toput(gate).locs
+                if i ∈ qubits
+                    idr = IdentityRecorder()
+                    push!(idrs,idr)
+                    push!(qcn, put(nq, i => idr))
+                end
+            end
+        end
+	end
+	return qcn,idrs
 end
