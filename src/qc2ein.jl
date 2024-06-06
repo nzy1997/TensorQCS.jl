@@ -27,6 +27,17 @@ function YaoPlots.draw!(c::YaoPlots.CircuitGrid, p::ComplexConj{<:PrimitiveBlock
     YaoPlots._draw!(c, [controls..., (getindex.(Ref(address), occupied_locs(p)), bts[1], "conj of "*bts[2])])
 end
 
+struct ColoredBlock{D} <: TrivialGate{D}
+    color
+end
+Yao.nqudits(sr::ColoredBlock) = 1
+Yao.print_block(io::IO, cb::ColoredBlock) = print(io, cb.color)
+
+function YaoPlots.draw!(c::YaoPlots.CircuitGrid, p::ColoredBlock, address, controls)
+    @assert length(controls) == 0
+    YaoPlots._draw!(c, [(getindex.(Ref(address), (1,)), c.gatestyles.g, "$(p.color)")])
+end
+
 abstract type AbstractRecoder{D} <: TrivialGate{D} end
 
 mutable struct IdentityRecorder{D} <: AbstractRecoder{D}

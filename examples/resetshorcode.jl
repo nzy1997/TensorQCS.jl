@@ -1,6 +1,7 @@
 using TensorQCS
 using TensorQEC
 using TensorQCS.Yao
+using DelimitedFiles
 
 function meandcr!(qc::ChainBlock, i::Int, st_me, qccr, num_qubits)
 	qcme = chain(12)
@@ -63,42 +64,10 @@ function reset_shor_circuit()
 end
 
 qc, qcen = reset_shor_circuit()
-vizcircuit(qc)
-pairs,vector = error_pairs(1e-5) 
-eqc = error_quantum_circuit(qc,pairs)
-eqcen = error_quantum_circuit(qcen,pairs)
-
-regrs = rand_state(1)
-reg = join(zero_state(12), regrs, zero_state(8))
-infs = []
-for i in 1:100
-	apply!(reg, subroutine(eqcen, 1:9))
-	apply!(reg, eqc)
-    apply!(reg, eqc)
-	apply!(reg, subroutine(eqcen', 1:9))
-    inf = 1 - fidelity(reg, join(zero_state(12), regrs, zero_state(8))) 
-	@show i, inf
-    push!(infs,inf)
+for error_rate in [1e-5, 1e-4, 1e-3]
+    infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=10, nbatch=3)
+    writedlm("examples/data/"*"$error_rate"*"infs.csv", infs)
+    writedlm("examples/data/"*"$error_rate"*"vector.csv", vector)
 end
 
-# Error X without correction
-reg1 = copy(regrs)
-infs = []
-for i in 1:100000
-	apply!(reg1, pairs[1].second)
-	apply!(reg1, pairs[1].second)
-    inf = 1 - fidelity(reg1, regrs) 
-	@show i, inf
-    push!(infs,inf)
-end
-
-using Test
-@testset "reset_shor_circuit" begin
-	qc, qcen = reset_shor_circuit()
-	regrs = rand_state(1)
-	reg = join(zero_state(12), regrs, zero_state(8))
-	apply!(reg, subroutine(qcen, 1:9))
-	apply!(reg, qc)
-	apply!(reg, subroutine(qcen', 1:9))
-	@test fidelity(reg, join(zero_state(12), regrs, zero_state(8))) ≈ 1
-end
+# readdlm("examples/data/infs.csv", '\t')

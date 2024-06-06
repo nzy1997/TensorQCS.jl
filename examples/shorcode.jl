@@ -73,7 +73,7 @@ vizcircuit(qcf; starting_texts = 1:nqubits(qcf), filename = "ToricCode_2.svg")
 function two_rounds_circuit()
 	qc, data_qubits, num_qubits ,qcen= shor_code_cir()
 	cm = ConnectMap(data_qubits,setdiff(1:69, data_qubits), 69)
-	qc2 = chain(69,subroutine(69,qcen,1:9),subroutine(69,qc,1:39),subroutine(69,qc,(1:9) ∪ (40:69)),subroutine(69,qcen',1:9))
+	qc2 = chain(69,put(69,9=>ConstGate.S),subroutine(69,qcen,1:9),subroutine(69,qc,1:39),subroutine(69,qc,(1:9) ∪ (40:69)),subroutine(69,qcen',1:9))
 	qc2 = simplify(qc2; rules = [to_basictypes, Optimise.eliminate_nested])
 	qcf, srs = ein_circ(qc2, cm)
 	qcf, idrs = add_indentity(qcf, collect(1:39))
@@ -82,7 +82,7 @@ end
 qcf, srs, idrs,cm = two_rounds_circuit()
 tn = qc2enisum(qcf, srs, cm)
 optnet = optimize_code(tn, TreeSA(), OMEinsum.MergeVectors()) 
-inf = 1-abs(contract(TensorNetwork(optnet.code,tn.tensors))[1]/4)
+inf = 1-abs(contract(optnet)[1]/4)
 
 cost, gradient = OMEinsum.cost_and_gradient(optnet.code, (optnet.tensors...,))
 

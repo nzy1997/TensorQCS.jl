@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="102" height="225" viewBox="0 0 102 225">
+<defs>
+<g>
+<g id="glyph-0-0">
+<path d="M 2.976562 -8.140625 L 2.898438 -6.515625 C 2.894531 -6.449219 2.890625 -6.382812 2.886719 -6.324219 C 2.882812 -6.265625 2.882812 -6.203125 2.882812 -6.140625 C 2.882812 -5.953125 2.835938 -5.816406 2.738281 -5.730469 C 2.640625 -5.644531 2.492188 -5.601562 2.289062 -5.601562 C 2.097656 -5.601562 1.957031 -5.652344 1.871094 -5.753906 C 1.785156 -5.855469 1.742188 -6.023438 1.742188 -6.257812 L 1.742188 -6.5625 L 1.84375 -8.71875 C 1.847656 -8.90625 1.898438 -9.042969 1.996094 -9.132812 C 2.09375 -9.222656 2.242188 -9.265625 2.445312 -9.265625 L 6.914062 -9.265625 C 7.222656 -9.265625 7.453125 -9.207031 7.609375 -9.089844 C 7.765625 -8.972656 7.84375 -8.800781 7.84375 -8.578125 C 7.84375 -8.464844 7.820312 -8.34375 7.769531 -8.214844 C 7.71875 -8.085938 7.648438 -7.949219 7.554688 -7.804688 L 2.945312 -1.101562 L 6.5625 -1.101562 L 6.65625 -2.929688 C 6.65625 -2.933594 6.65625 -2.945312 6.65625 -2.960938 C 6.683594 -3.558594 6.878906 -3.859375 7.25 -3.859375 C 7.441406 -3.859375 7.582031 -3.804688 7.671875 -3.699219 C 7.761719 -3.59375 7.804688 -3.421875 7.804688 -3.1875 C 7.804688 -3.1875 7.800781 -3.15625 7.796875 -3.089844 C 7.792969 -3.023438 7.789062 -2.960938 7.789062 -2.898438 L 7.679688 -0.53125 C 7.675781 -0.339844 7.625 -0.203125 7.53125 -0.121094 C 7.4375 -0.0390625 7.289062 0 7.085938 0 L 2.179688 0 C 1.957031 0 1.773438 -0.0664062 1.632812 -0.195312 C 1.492188 -0.324219 1.421875 -0.496094 1.421875 -0.703125 C 1.421875 -0.828125 1.453125 -0.964844 1.515625 -1.117188 C 1.578125 -1.269531 1.675781 -1.441406 1.804688 -1.632812 L 6.289062 -8.140625 Z M 2.976562 -8.140625 "/>
+</g>
+</g>
+</defs>
+<path fill="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 0%, 0%)" stroke-opacity="1" stroke-miterlimit="10" d="M 39 79.5 L 39 55.5 L 63 55.5 L 63 79.5 Z M 39 79.5 "/>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#glyph-0-0" x="46.199219" y="72.132812"/>
+</g>
+<path fill="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 0%, 0%)" stroke-opacity="1" stroke-miterlimit="10" d="M 25.5 67.5 L 39 67.5 "/>
+<path fill="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 0%, 0%)" stroke-opacity="1" stroke-miterlimit="10" d="M 63 67.5 L 76.5 67.5 "/>
+<path fill="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 0%, 0%)" stroke-opacity="1" stroke-miterlimit="10" d="M 76.5 22.5 L 25.5 22.5 "/>
+<path fill="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 0%, 0%)" stroke-opacity="1" stroke-miterlimit="10" d="M 76.5 67.5 L 76.5 67.5 "/>
+<path fill="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 0%, 0%)" stroke-opacity="1" stroke-miterlimit="10" d="M 76.5 112.5 L 25.5 112.5 "/>
+<path fill="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 0%, 0%)" stroke-opacity="1" stroke-miterlimit="10" d="M 76.5 157.5 L 25.5 157.5 "/>
+<path fill="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 0%, 0%)" stroke-opacity="1" stroke-miterlimit="10" d="M 76.5 202.5 L 25.5 202.5 "/>
+</svg>
