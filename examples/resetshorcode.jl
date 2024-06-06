@@ -2,7 +2,9 @@ using TensorQCS
 using TensorQEC
 using TensorQCS.Yao
 using DelimitedFiles
-
+using TensorQCS.CUDA
+CUDA.allowscalar(false)
+CUDA.device!(0)
 function meandcr!(qc::ChainBlock, i::Int, st_me, qccr, num_qubits)
 	qcme = chain(12)
 	TensorQEC.measure_circuit!(qcme, st_me[i], 9 + mod1(i, 3))
@@ -64,10 +66,10 @@ function reset_shor_circuit()
 end
 
 qc, qcen = reset_shor_circuit()
-for error_rate in [1e-9,1e-8,1e-7,1e-6,1e-5, 1e-4, 1e-3]
-# for error_rate in [1e-9,1e-8]
-    infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=200, nbatch=50)
-    # infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=10, nbatch=3)
+# for error_rate in [1-10,1e-9,1e-8,1e-7,1e-6,1e-5, 1e-4, 1e-3]
+for error_rate in [1e-9,1e-8]
+    # infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=500, nbatch=500)
+    infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=10, nbatch=3)
     writedlm("examples/data/"*"$error_rate"*"infs.csv", infs)
     writedlm("examples/data/"*"$error_rate"*"vector.csv", vector)
 end

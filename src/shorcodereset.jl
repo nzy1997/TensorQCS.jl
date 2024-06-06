@@ -1,10 +1,4 @@
-import Yao.fidelity
-
-function fidelity(reg1::CuArray, reg2::CuArray)
-	reg1_cpu = reg1 |> cpu 
-	reg2_cpu = reg2 |> cpu 
-	return fidelity(reg1_cpu, reg2_cpu)
-end
+YaoArrayRegister.pure_state_fidelity(v1::CuArray{ComplexF64, 1}, v2::CuArray{ComplexF64, 1}) = abs(v1' * v2)
 function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock; error_rate = 1e-5, iters = 10,use_cuda = false,nbatch = 3)
 	pairs, vector = error_pairs(error_rate)
 	eqc = error_quantum_circuit(qc, pairs)
@@ -21,8 +15,7 @@ function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock; error_rate = 1e-
 		apply!(reg, eqc)
 		apply!(reg, eqc)
 		regt = apply(reg, subroutine(eqcen', 1:9))
-		regt = regt |> cpu
-		reg0 = reg0 |> cpu
+		@show regt
 		inf = 1 .- fidelity(regt, reg0)
 		@show i, inf
 		push!(infs, inf)
