@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.10.3"
+julia_version = "1.10.4"
 manifest_format = "2.0"
 project_hash = "f2705389898486a9f30f0070b1cc54f023fb03e9"
 
@@ -820,17 +820,13 @@ version = "1.2.0"
 
 [[deps.OMEinsum]]
 deps = ["AbstractTrees", "BatchedRoutines", "ChainRulesCore", "Combinatorics", "LinearAlgebra", "MacroTools", "OMEinsumContractionOrders", "Test", "TupleTools"]
-path = "../../OMEinsum"
+git-tree-sha1 = "5b7f4666a3fb57f4bca9f2cdb48b0e5478b1717b"
 uuid = "ebe7aa44-baf0-506c-a96f-8464559b3922"
 version = "0.8.1"
+weakdeps = ["CUDA"]
 
     [deps.OMEinsum.extensions]
-    AMDGPUExt = "AMDGPU"
     CUDAExt = "CUDA"
-
-    [deps.OMEinsum.weakdeps]
-    AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
-    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 
 [[deps.OMEinsumContractionOrders]]
 deps = ["AbstractTrees", "BetterExp", "JSON", "SparseArrays", "Suppressor"]
@@ -1239,19 +1235,19 @@ version = "1.10.0"
 
 [[deps.TensorInference]]
 deps = ["Artifacts", "CUDA", "DocStringExtensions", "GenericTensorNetworks", "LinearAlgebra", "OMEinsum", "Pkg", "PrecompileTools", "Requires", "StatsBase", "TropicalNumbers"]
-path = "../../TensorInference"
+git-tree-sha1 = "ab8b1e6e7a37b4803a0b671ffe2e2a8824718b94"
 uuid = "c2297e78-99bd-40ad-871d-f50e56b81012"
-version = "0.4.3"
+version = "0.4.2"
 
 [[deps.TensorQCS]]
-deps = ["CUDA", "KaHyPar", "LinearAlgebra", "OMEinsum", "Yao", "YaoPlots"]
+deps = ["CUDA", "KaHyPar", "LinearAlgebra", "OMEinsum", "Yao"]
 path = ".."
 uuid = "da12aa28-41b5-415a-b72f-86f814ffef72"
 version = "1.0.0-DEV"
 
 [[deps.TensorQEC]]
 deps = ["Combinatorics", "Debugger", "DelimitedFiles", "Distributions", "LinearAlgebra", "LuxorGraphPlot", "OMEinsum", "TensorInference", "Yao", "YaoAPI"]
-path = "../../TensorQEC"
+path = "../../TensorQEC.jl"
 uuid = "0500ac79-7fb5-4262-aaea-37bb1845d1ef"
 version = "1.0.0-DEV"
 
@@ -1407,7 +1403,7 @@ version = "0.13.13"
 
 [[deps.YaoPlots]]
 deps = ["LinearAlgebra", "Luxor", "Thebes", "YaoArrayRegister", "YaoBlocks"]
-path = "../../Yao/lib/YaoPlots"
+git-tree-sha1 = "422c136b6ffcd5f86250272381178fb88d93dd19"
 uuid = "32cfe2d9-419e-45f2-8191-2267705d8dbc"
 version = "0.9.2"
 

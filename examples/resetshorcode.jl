@@ -64,8 +64,10 @@ function reset_shor_circuit()
 end
 
 qc, qcen = reset_shor_circuit()
-for error_rate in [1e-5, 1e-4, 1e-3]
-    infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=10, nbatch=3)
+for error_rate in [1e-9,1e-8,1e-7,1e-6,1e-5, 1e-4, 1e-3]
+# for error_rate in [1e-9,1e-8]
+    infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=200, nbatch=50)
+    # infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=10, nbatch=3)
     writedlm("examples/data/"*"$error_rate"*"infs.csv", infs)
     writedlm("examples/data/"*"$error_rate"*"vector.csv", vector)
 end
