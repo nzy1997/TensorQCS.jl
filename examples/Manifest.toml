@@ -2,7 +2,7 @@
 
 julia_version = "1.10.4"
 manifest_format = "2.0"
-project_hash = "f2705389898486a9f30f0070b1cc54f023fb03e9"
+project_hash = "db2f52ef427eb4fe74668efbea3f29292f7f1f38"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -1376,7 +1376,7 @@ version = "1.5.0+0"
 
 [[deps.Yao]]
 deps = ["BitBasis", "LinearAlgebra", "LuxurySparse", "Reexport", "YaoAPI", "YaoArrayRegister", "YaoBlocks", "YaoPlots", "YaoSym", "YaoToEinsum"]
-git-tree-sha1 = "336f928f02be7d535c3afdf7cfdd963edff33133"
+path = "/home/zhongyini/jcode/Yao.jl/"
 uuid = "5872b779-8223-5990-8dd0-5abbb0748c8c"
 version = "0.9.0"
 weakdeps = ["CUDA"]
@@ -1385,37 +1385,37 @@ weakdeps = ["CUDA"]
     CuYao = "CUDA"
 
 [[deps.YaoAPI]]
-git-tree-sha1 = "11d2c13b14cf8d354f19716d49af464e8c3c3eed"
+path = "../../../.julia/dev/Yao/lib/YaoAPI"
 uuid = "0843a435-28de-4971-9e8b-a9641b2983a8"
 version = "0.4.7"
 
 [[deps.YaoArrayRegister]]
 deps = ["Adapt", "BitBasis", "DocStringExtensions", "LegibleLambdas", "LinearAlgebra", "LuxurySparse", "MLStyle", "Random", "SparseArrays", "StaticArrays", "StatsBase", "TupleTools", "YaoAPI"]
-git-tree-sha1 = "aa5c55eaabf3a6f25e6018feabf74a9ba1a1d98d"
+path = "../../../.julia/dev/Yao/lib/YaoArrayRegister"
 uuid = "e600142f-9330-5003-8abb-0ebd767abc51"
-version = "0.9.9"
+version = "0.9.10"
 
 [[deps.YaoBlocks]]
 deps = ["BitBasis", "CacheServers", "ChainRulesCore", "DocStringExtensions", "InteractiveUtils", "KrylovKit", "LegibleLambdas", "LinearAlgebra", "LuxurySparse", "MLStyle", "Random", "SparseArrays", "StaticArrays", "StatsBase", "TupleTools", "YaoAPI", "YaoArrayRegister"]
-git-tree-sha1 = "aa2b49286895adca169dafc2adefac395de5a39e"
+path = "../../../.julia/dev/Yao/lib/YaoBlocks"
 uuid = "418bc28f-b43b-5e0b-a6e7-61bbc1a2c1df"
 version = "0.13.13"
 
 [[deps.YaoPlots]]
 deps = ["LinearAlgebra", "Luxor", "Thebes", "YaoArrayRegister", "YaoBlocks"]
-git-tree-sha1 = "422c136b6ffcd5f86250272381178fb88d93dd19"
+path = "../../../.julia/dev/Yao/lib/YaoPlots"
 uuid = "32cfe2d9-419e-45f2-8191-2267705d8dbc"
 version = "0.9.2"
 
 [[deps.YaoSym]]
 deps = ["BitBasis", "LinearAlgebra", "LuxurySparse", "SparseArrays", "SymEngine", "YaoArrayRegister", "YaoBlocks"]
-git-tree-sha1 = "e887044e08fe3bfa72dc7b468eacc3124224e340"
+path = "../../../.julia/dev/Yao/lib/YaoSym"
 uuid = "3b27209a-d3d6-11e9-3c0f-41eb92b2cb9d"
 version = "0.6.8"
 
 [[deps.YaoToEinsum]]
 deps = ["LinearAlgebra", "OMEinsum", "YaoBlocks"]
-git-tree-sha1 = "8fa3ecb5b69f0f7aaf3162a991993205dc9784d6"
+path = "../../../.julia/dev/Yao/lib/YaoToEinsum"
 uuid = "9b173c7b-dc24-4dc5-a0e1-adab2f7b6ba9"
 version = "0.2.3"
 

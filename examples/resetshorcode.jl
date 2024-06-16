@@ -2,9 +2,12 @@ using TensorQCS
 using TensorQEC
 using TensorQCS.Yao
 using DelimitedFiles
+using Random
 using TensorQCS.CUDA
+using Test
 CUDA.allowscalar(false)
 CUDA.device!(0)
+
 function meandcr!(qc::ChainBlock, i::Int, st_me, qccr, num_qubits)
 	qcme = chain(12)
 	TensorQEC.measure_circuit!(qcme, st_me[i], 9 + mod1(i, 3))
@@ -17,18 +20,15 @@ function meandcr!(qc::ChainBlock, i::Int, st_me, qccr, num_qubits)
 	end
 end
 
-function reset_shor_circuit()
+function reset_shor_circuit(error_rate)
 	st = stabilizers(ShorCode())
 	qcen, data_qubits, code = encode_stabilizers(st)
 	qcen = chain(9, put(9, 9 => H), qcen)
 	data_qubit_num = size(code.matrix, 2) ÷ 2
 	st_me = stabilizers(ShorCode(), linearly_independent = false)
 	num_qubits = 21
-	qc = chain(num_qubits)
 
-    push!(qc, put(num_qubits, 1 => Z))
-    push!(qc, put(num_qubits, 4 => Z))
-    push!(qc, put(num_qubits, 7 => Z))
+	pairs, vector = error_pairs(error_rate)
 
 	st_pos = [19, 20, 21]
 	qccr = chain(
@@ -47,31 +47,73 @@ function reset_shor_circuit()
 		control(num_qubits, (st_pos[2], st_pos[3]), 9 => X),
 	)
 	# Z error, X stabilizers
+	qc = chain(num_qubits)
 	push!(qc, put(21, 18 => H))
 	push!(qc, subroutine(qcen, 10:18))
-    [push!(qc, control(num_qubits, 9+i, i => X) ) for i in 1:9]
+
+	qc1 = chain(num_qubits)
+	push!(qc1, put(num_qubits, 1 => Z))
+	push!(qc1, put(num_qubits, 4 => Z))
+	push!(qc1, put(num_qubits, 7 => Z))
+	[push!(qc1, control(num_qubits, 9 + i, i => X)) for i in 1:9]
 	for i in 1:3
-		meandcr!(qc, i, st_me, qccr, num_qubits)
+		meandcr!(qc1, i, st_me, qccr, num_qubits)
 	end
-	push!(qc, Measure(num_qubits; locs = 10:18, resetto = bit"000000000"))
+	push!(qc1, Measure(num_qubits; locs = 10:18, resetto = bit"000000000"))
+	eqc1 = error_quantum_circuit(qc1, pairs)
+	push!(qc, eqc1)
 
 	# X error, Z stabilizers
+	qc2 = chain(num_qubits)
 	push!(qc, subroutine(qcen, 10:18))
-    [push!(qc, control(num_qubits, i, 9+i => X) ) for i in 1:9]
+	[push!(qc2, control(num_qubits, i, 9 + i => X)) for i in 1:9]
 	for i in 4:12
-		meandcr!(qc, i, st_me, qccr, num_qubits)
+		meandcr!(qc2, i, st_me, qccr, num_qubits)
 	end
-	push!(qc, Measure(num_qubits; locs = 10:18, resetto = bit"000000000"))
-	return qc, qcen
+	push!(qc2, Measure(num_qubits; locs = 10:18, resetto = bit"000000000"))
+	eqc2 = error_quantum_circuit(qc2, pairs)
+	push!(qc, eqc2)
+	return qc, qcen, vector, error_quantum_circuit(chain(1,X), pairs)
 end
 
-qc, qcen = reset_shor_circuit()
-# for error_rate in [1-10,1e-9,1e-8,1e-7,1e-6,1e-5, 1e-4, 1e-3]
-for error_rate in [1e-9,1e-8]
-    # infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=500, nbatch=500)
-    infs, vector = do_circuit_simulation(qc, qcen; error_rate, use_cuda = true, iters=10, nbatch=3)
-    writedlm("examples/data/"*"$error_rate"*"infs.csv", infs)
-    writedlm("examples/data/"*"$error_rate"*"vector.csv", vector)
+function singleX(exqc)
+	reg = rand_state(1; nbatch = 200)
+	reg = cu(reg)
+
+	reg0 = copy(reg)
+	infs = Vector{Vector{Float64}}()
+	for i in 1:500
+		apply!(reg, exqc)
+		apply!(reg, exqc)
+		inf = 1 .- fidelity(reg, reg0)
+		# @show i, inf[1]
+		push!(infs, inf)
+	end
+	return infs
+end
+for error_rate in [1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
+	for j in 1:50
+		@show j,error_rate
+		qc, qcen, vector,qcx = reset_shor_circuit(error_rate)
+
+		xinfs = singleX(qcx)
+		writedlm("examples/data/E($error_rate)Xinfs($j).csv", xinfs)
+
+		infs = do_circuit_simulation(qc, qcen; use_cuda = true, iters = 500, nbatch = 50)
+		writedlm("examples/data/E($error_rate)infs($j).csv", infs)
+		writedlm("examples/data/E($error_rate)vector($j).csv", vector)
+	end
 end
 
-# readdlm("examples/data/infs.csv", '\t')
+notzero(x) = !iszero(x)
+function print_state(reg)
+	println(reg)
+	nq = nqubits(reg)
+	ids = findall(isone, notzero.(reg.state))
+	println("non zero bits: $(length(ids))")
+	for id in ids
+		println("nbatch = $(id.I[2]), bits = $(BitStr{nq}(id.I[1] - 1)), val = $(reg.state[id])")
+	end
+end
+
+# infs, vector = do_circuit_simulation(qc, qcen; error_rate= 1e-5, use_cuda = true, iters=500, nbatch=1)

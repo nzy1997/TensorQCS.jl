@@ -2,3 +2,4 @@
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 TensorQCS = "da12aa28-41b5-415a-b72f-86f814ffef72"
 TensorQEC = "0500ac79-7fb5-4262-aaea-37bb1845d1ef"
+Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
