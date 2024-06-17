@@ -86,20 +86,20 @@ function singleX(exqc)
 		apply!(reg, exqc)
 		apply!(reg, exqc)
 		inf = 1 .- fidelity(reg, reg0)
-		# @show i, inf[1]
+		i%10 ==0 && print("i = $i ")
 		push!(infs, inf)
 	end
 	return infs
 end
-for error_rate in [1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
-	for j in 1:50
+for error_rate in [1e-5,5*1e-4, 1e-4, 5*1e-3,1e-3, 1e-2]
+	for j in 1:2
 		@show j,error_rate
 		qc, qcen, vector,qcx = reset_shor_circuit(error_rate)
 
 		xinfs = singleX(qcx)
 		writedlm("examples/data/E($error_rate)Xinfs($j).csv", xinfs)
 
-		infs = do_circuit_simulation(qc, qcen; use_cuda = true, iters = 500, nbatch = 50)
+		infs = do_circuit_simulation(qc, qcen; use_cuda = true, iters = 1000, nbatch = 100)
 		writedlm("examples/data/E($error_rate)infs($j).csv", infs)
 		writedlm("examples/data/E($error_rate)vector($j).csv", vector)
 	end

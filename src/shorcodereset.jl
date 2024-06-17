@@ -12,7 +12,7 @@ function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock;  iters = 10,use_
 		apply!(reg, qc)
 		regt = apply(reg, subroutine(qcen', 1:9))
 		inf = 1 .- fidelity(regt, reg0)
-		# @show i, inf[1]
+		i%10 ==0 && print("i = $i ")
 		push!(infs, inf)
 	end
     return infs

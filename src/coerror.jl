@@ -1,9 +1,28 @@
 function coherent_error_unitary(u::AbstractMatrix{T}, error_rate::Real; cache::Union{Vector, Nothing} = nothing) where T
+    error_rate0 = error_rate
+    for i in 1:100
+        mtr ,inf = _coherent_error_unitary(u,error_rate0)
+        if (inf/error_rate)<0.3
+            error_rate0 = error_rate0 * 1.5
+            continue
+        elseif (inf/error_rate)>3
+            error_rate0 = error_rate0 * 1.5
+            continue
+        end
+        @show "Iteration!",i
+        cache === nothing || push!(cache, inf)
+        return mtr
+    end
+    mtr ,inf = _coherent_error_unitary(u,error_rate0)
+    cache === nothing || push!(cache, inf)
+    return mtr
+end
+
+function _coherent_error_unitary(u::AbstractMatrix{T}, error_rate::Real) where T
     appI = randn(T,size(u))*error_rate + I
     q2 , _ = qr(appI)
     q = u * q2
-    cache === nothing || push!(cache, 1 - abs(tr(q'*u)/size(u,1)))
-    return Matrix(q)
+    return Matrix(q),1 - abs(tr(q'*u)/size(u,1))
 end
 
 @const_gate CCZ::ComplexF64 = diagm([1, 1,1,1,1,1,1,-1])

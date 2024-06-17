@@ -6,10 +6,11 @@ using TensorQCS.LinearAlgebra
 @testset "coherent_error_unitary" begin
     u = rand_unitary(16)
     inf = Float64[]
-    u2 = coherent_error_unitary(u, 1e-2;cache = inf)
+    u2 = coherent_error_unitary(u, 1e-4;cache = inf)
     @test u2'*u2 ≈ I
     @test inf[1] < 1e-2
     @test inf[1] > 0
+    @show inf[1]
     @show coherent_error_unitary(mat(X), 1e-2;cache = inf) 
 end
 
