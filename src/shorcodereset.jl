@@ -1,4 +1,4 @@
-function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock;  iters = 10,use_cuda = false,nbatch = 3)
+function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;  iters = 10,use_cuda = false,nbatch = 3, ct=1)
 	regrs = zero_state(1;nbatch)
 	reg = join(zero_state(12;nbatch), regrs, zero_state(8;nbatch))
 	use_cuda && (reg = reg |> cu)
@@ -8,12 +8,18 @@ function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock;  iters = 10,use_
 	infs = Vector{Vector{Float64}}()
 	for i in 1:iters
 		# rqc = add_rand_pauli(qc)
-		apply!(reg, qc)
-		apply!(reg, qc)
+		apply!(reg, eqcz)
+		apply!(reg, eqcz)
+		i%ct ==0 && apply!(reg, qc)
 		regt = apply(reg, subroutine(qcen', 1:9))
 		inf = 1 .- fidelity(regt, reg0)
 		i%10 ==0 && print("i = $i ")
 		push!(infs, inf)
+		if sum(inf)/nbatch > 0.5
+			@show sum(inf)
+			@show "break iter:", i
+			break
+		end
 	end
     return infs
 end

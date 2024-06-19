@@ -52,9 +52,7 @@ function reset_shor_circuit(error_rate)
 	push!(qc, subroutine(qcen, 10:18))
 
 	qc1 = chain(num_qubits)
-	push!(qc1, put(num_qubits, 1 => Z))
-	push!(qc1, put(num_qubits, 4 => Z))
-	push!(qc1, put(num_qubits, 7 => Z))
+
 	[push!(qc1, control(num_qubits, 9 + i, i => X)) for i in 1:9]
 	for i in 1:3
 		meandcr!(qc1, i, st_me, qccr, num_qubits)
@@ -73,33 +71,54 @@ function reset_shor_circuit(error_rate)
 	push!(qc2, Measure(num_qubits; locs = 10:18, resetto = bit"000000000"))
 	eqc2 = error_quantum_circuit(qc2, pairs)
 	push!(qc, eqc2)
-	return qc, qcen, vector, error_quantum_circuit(chain(1,X), pairs)
+	qc3 = chain(put(num_qubits, 1 => Z),put(num_qubits, 4 => Z),put(num_qubits, 7 => Z))
+	return qc, qcen, vector, error_quantum_circuit(chain(1,X), pairs),error_quantum_circuit(qc3,pairs)
 end
 
-function singleX(exqc)
-	reg = rand_state(1; nbatch = 200)
+function singleX(exqc,nbatch;iters = 10)
+	reg = rand_state(1; nbatch)
 	reg = cu(reg)
 
 	reg0 = copy(reg)
 	infs = Vector{Vector{Float64}}()
-	for i in 1:500
+	for i in 1:iters
 		apply!(reg, exqc)
 		apply!(reg, exqc)
 		inf = 1 .- fidelity(reg, reg0)
 		i%10 ==0 && print("i = $i ")
 		push!(infs, inf)
+		if sum(inf)/nbatch > 0.5
+			break
+		end
 	end
 	return infs
 end
-for error_rate in [1e-5,5*1e-4, 1e-4, 5*1e-3,1e-3, 1e-2]
-	for j in 1:2
-		@show j,error_rate
-		qc, qcen, vector,qcx = reset_shor_circuit(error_rate)
+# for error_rate in [1e-8,5*1e-7,1e-7,5*1e-6,1e-6]
+# 	for j in 1:8
+# 		nbatch = 100
+# 		@show j,error_rate
+# 		qc, qcen, vector,qcx,eqcz = reset_shor_circuit(error_rate)
 
-		xinfs = singleX(qcx)
+# 		xinfs = singleX(qcx,nbatch)
+# 		writedlm("examples/data/E($error_rate)Xinfs($j).csv", xinfs)
+
+# 		infs = do_circuit_simulation(qc, qcen; use_cuda = true, iters = 1000, nbatch )
+# 		writedlm("examples/data/E($error_rate)infs($j).csv", infs)
+# 		writedlm("examples/data/E($error_rate)vector($j).csv", vector)
+# 	end
+# end
+
+for error_rate in [1e-8]
+	qc, qcen, vector,qcx,eqcz = reset_shor_circuit(error_rate)
+	for j in [1,5,10,20,50,100]
+		nbatch = 100
+		@show j,error_rate
+		
+
+		xinfs = singleX(qcx,nbatch;iters = 1000)
 		writedlm("examples/data/E($error_rate)Xinfs($j).csv", xinfs)
 
-		infs = do_circuit_simulation(qc, qcen; use_cuda = true, iters = 1000, nbatch = 100)
+		infs = do_circuit_simulation(qc, qcen,eqcz; use_cuda = true, iters = 1000, nbatch ,ct =j)
 		writedlm("examples/data/E($error_rate)infs($j).csv", infs)
 		writedlm("examples/data/E($error_rate)vector($j).csv", vector)
 	end
