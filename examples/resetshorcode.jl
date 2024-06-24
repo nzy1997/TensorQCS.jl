@@ -24,9 +24,9 @@ function reset_shor_circuit()
 	num_qubits = 21
 	qc = chain(num_qubits)
 
-    push!(qc, put(num_qubits, 1 => Z))
-    push!(qc, put(num_qubits, 4 => Z))
-    push!(qc, put(num_qubits, 7 => Z))
+    # push!(qc, put(num_qubits, 1 => Z))
+    # push!(qc, put(num_qubits, 4 => Z))
+    # push!(qc, put(num_qubits, 7 => Z))
 
 	st_pos = [19, 20, 21]
 	qccr = chain(
@@ -71,3 +71,8 @@ for error_rate in [1e-5, 1e-4, 1e-3]
 end
 
 # readdlm("examples/data/infs.csv", '\t')
+
+
+qcf = chain(21,subroutine(qcen,1:9),qc,subroutine(qcen',1:9))
+qcf = chain(21,subroutine(qcen,1:9),qc,qc,subroutine(qcen',1:9))
+qc2= error_location(qcf,[1:21...],9)

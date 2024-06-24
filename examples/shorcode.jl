@@ -65,7 +65,7 @@ function error_infidelity(error_rates::Vector{Float64})
         @show vec
     end
 end   
-error_infidelity([1e-8,1e-7,1e-6,1e-5,1e-4,1e-3])
+# error_infidelity([1e-8,1e-7,1e-6,1e-5,1e-4,1e-3])
 
 YaoPlots.CircuitStyles.r[] = 0.3
 vizcircuit(qcf; starting_texts = 1:nqubits(qcf), filename = "ToricCode_2.svg")
@@ -88,6 +88,7 @@ cost, gradient = OMEinsum.cost_and_gradient(optnet.code, (optnet.tensors...,))
 
 ansvec = [gradient[i.symbol]*optnet.tensors[i.symbol]'-optnet.tensors[i.symbol]*gradient[i.symbol]' for i in idrs]
 abssum = (x->sum(abs.(x))).(ansvec)
+n0vec = findall(>(1e-2),abssum)
 
 function show_indices(qc::ChainBlock, srsnum::Int)
 	qc = simplify(qc; rules = [to_basictypes, Optimise.eliminate_nested])

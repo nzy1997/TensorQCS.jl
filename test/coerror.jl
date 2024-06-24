@@ -35,3 +35,14 @@ end
     @test length(idrs) == 6
     @test tn.tensors[idrs[3].symbol] == ComplexF64[[1 0];[0 1]]
 end
+
+@testset "is_error" begin
+    qc = chain(3,control(3,1,2=>X),put(3,2=>X),put(3,2=>X), put(3, 3 => Y), put(3, 1 => Z), Measure(3; locs = [1,3], resetto = bit"00"),control(3,3,2=>X))
+    @test !is_error(qc,2;nbatch = 10) 
+end
+
+@testset "error_location" begin
+    qc = chain(3,control(3,1,2=>X),put(3,2=>X),put(3,2=>X), put(3, 3 => Y), put(3, 1 => Z), Measure(3; locs = [1,3], resetto = bit"00"),control(3,3,2=>X))
+    qc2= error_location(qc,[1,2,3],2) 
+
+end

@@ -71,7 +71,6 @@ end
 
 function YaoToEinsum.add_gate!(eb::YaoToEinsum.EinBuilder{T}, b::PutBlock{D,C,IdentityRecorder{D}}) where {T,D,C}
     b.content.symbol = length(eb.tensors)+1
-    # return YaoToEinsum.add_matrix!(eb, 1, T[[1 0]; [0 1]], [b.locs[1]])
     m = T[[1 0]; [0 1]]
     k = 1 
     locs = [b.locs[1]] 
