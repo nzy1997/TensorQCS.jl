@@ -1,27 +1,28 @@
-function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;  iters = 10,use_cuda = false,nbatch = 3, ct=1)
-	regrs = zero_state(1;nbatch)
-	reg = join(zero_state(12;nbatch), regrs, zero_state(8;nbatch))
+function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;  iters = 10,use_cuda = false,nshots =10, ct=1)
+	reg = zero_state(21)
 	use_cuda && (reg = reg |> cu)
-
-	reg0 = copy(reg)
 	apply!(reg, subroutine(qcen, 1:9))
-	infs = Vector{Vector{Float64}}()
+	erps = Vector{Float64}()
 	for i in 1:iters
 		# rqc = add_rand_pauli(qc)
 		apply!(reg, eqcz)
 		apply!(reg, eqcz)
 		i%ct ==0 && apply!(reg, qc)
-		regt = apply(reg, subroutine(qcen', 1:9))
-		inf = 1 .- fidelity(regt, reg0)
+		# print_state(reg)
+		push!(erps, error_probabillity(reg;nshots))
 		i%10 ==0 && print("i = $i ")
-		push!(infs, inf)
-		if sum(inf)/nbatch > 0.5
-			@show sum(inf)
-			@show "break iter:", i
-			break
-		end
 	end
-    return infs
+    return erps
+end
+
+# true or 1 represents |1>
+function classical_decode(btc::DitStr{2, 9, Int64})
+	return (sum(btc[1:3])>1) ⊻ (sum(btc[4:6])>1) ⊻ (sum(btc[7:9])>1) 
+end
+
+function error_probabillity(reg::ArrayReg;nshots =10)
+	mc = measure(reg,1:9;nshots)
+	return sum(classical_decode.(mc))/nshots
 end
 
 function add_rand_pauli(qc::ChainBlock)
@@ -39,4 +40,15 @@ function add_rand_pauli(qc::ChainBlock)
 		end
 	end
 	return qcr
+end
+
+notzero(x) = !iszero(x)
+function print_state(reg)
+	println(reg)
+	nq = nqubits(reg)
+	ids = findall(isone, notzero.(reg.state))
+	println("non zero bits: $(length(ids))")
+	for id in ids
+		println("nbatch = $(id.I[2]), bits = $(BitStr{nq}(id.I[1] - 1)), val = $(reg.state[id])")
+	end
 end

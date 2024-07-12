@@ -23,7 +23,7 @@ end
 function reset_shor_circuit(error_rate)
 	st = stabilizers(ShorCode())
 	qcen, data_qubits, code = encode_stabilizers(st)
-	qcen = chain(9, put(9, 9 => H), qcen)
+	# qcen = chain(9, put(9, 9 => H), qcen)
 	data_qubit_num = size(code.matrix, 2) ÷ 2
 	st_me = stabilizers(ShorCode(), linearly_independent = false)
 	num_qubits = 21
@@ -53,7 +53,7 @@ function reset_shor_circuit(error_rate)
 
 	qc1 = chain(num_qubits)
 
-	[push!(qc1, control(num_qubits, 9 + i, i => X)) for i in 1:9]
+	[push!(qc1, control(num_qubits,  i, 9+i => X)) for i in 1:9]
 	for i in 1:3
 		meandcr!(qc1, i, st_me, qccr, num_qubits)
 	end
@@ -64,35 +64,31 @@ function reset_shor_circuit(error_rate)
 	# X error, Z stabilizers
 	qc2 = chain(num_qubits)
 	push!(qc, subroutine(qcen, 10:18))
-	[push!(qc2, control(num_qubits, i, 9 + i => X)) for i in 1:9]
+	[push!(qc2, control(num_qubits, 9+i, i => X)) for i in 1:9]
 	for i in 4:12
 		meandcr!(qc2, i, st_me, qccr, num_qubits)
 	end
 	push!(qc2, Measure(num_qubits; locs = 10:18, resetto = bit"000000000"))
 	eqc2 = error_quantum_circuit(qc2, pairs)
 	push!(qc, eqc2)
-	qc3 = chain(put(num_qubits, 1 => Z),put(num_qubits, 4 => Z),put(num_qubits, 7 => Z))
+	qc3 = chain([put(num_qubits, i => X) for i in 1:9]...)
 	return qc, qcen, vector, error_quantum_circuit(chain(1,X), pairs),error_quantum_circuit(qc3,pairs)
 end
 
-function singleX(exqc,nbatch;iters = 10)
-	reg = rand_state(1; nbatch)
+function singleX(exqc;iters = 10,nshots = 10)
+	reg = zero_state(1)
 	reg = cu(reg)
-
-	reg0 = copy(reg)
-	infs = Vector{Vector{Float64}}()
+	erp = Vector{Float64}()
 	for i in 1:iters
 		apply!(reg, exqc)
 		apply!(reg, exqc)
-		inf = 1 .- fidelity(reg, reg0)
+		mc = measure(reg;nshots)
+		push!(erp,count(x->mc[x][1] == 1, 1:nshots)/nshots)
 		i%10 ==0 && print("i = $i ")
-		push!(infs, inf)
-		if sum(inf)/nbatch > 0.5
-			break
-		end
 	end
-	return infs
+	return erp
 end
+
 # for error_rate in [1e-8,5*1e-7,1e-7,5*1e-6,1e-6]
 # 	for j in 1:8
 # 		nbatch = 100
@@ -108,31 +104,20 @@ end
 # 	end
 # end
 
-for error_rate in [1e-8]
-	qc, qcen, vector,qcx,eqcz = reset_shor_circuit(error_rate)
-	for j in [1,5,10,20,50,100]
-		nbatch = 100
+for error_rate in [1e-5,1e-4,1e-3]
+	for j in 1:2
 		@show j,error_rate
-		
-
-		xinfs = singleX(qcx,nbatch;iters = 1000)
+		qc, qcen, vector,qcx,eqcz = reset_shor_circuit(error_rate)
+		xinfs = singleX(qcx;iters = 1000,nshots =Int(round(100/error_rate)))
 		writedlm("examples/data/E($error_rate)Xinfs($j).csv", xinfs)
-
-		infs = do_circuit_simulation(qc, qcen,eqcz; use_cuda = true, iters = 1000, nbatch ,ct =j)
-		writedlm("examples/data/E($error_rate)infs($j).csv", infs)
 		writedlm("examples/data/E($error_rate)vector($j).csv", vector)
+		for ct in [1,10,50,100,2000] 
+			infs = do_circuit_simulation(qc, qcen,eqcz; use_cuda = true, iters = 1000,nshots = Int(round(100/error_rate)),ct)
+			writedlm("examples/data/E($error_rate)infs($j)ct($ct).csv", infs)
+		end
 	end
 end
 
-notzero(x) = !iszero(x)
-function print_state(reg)
-	println(reg)
-	nq = nqubits(reg)
-	ids = findall(isone, notzero.(reg.state))
-	println("non zero bits: $(length(ids))")
-	for id in ids
-		println("nbatch = $(id.I[2]), bits = $(BitStr{nq}(id.I[1] - 1)), val = $(reg.state[id])")
-	end
-end
+
 
 # infs, vector = do_circuit_simulation(qc, qcen; error_rate= 1e-5, use_cuda = true, iters=500, nbatch=1)
