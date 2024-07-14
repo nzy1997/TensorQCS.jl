@@ -5,7 +5,7 @@ using DelimitedFiles
 using Random
 using TensorQCS.CUDA
 using Test
-CUDA.allowscalar(false)
+CUDA.allowscalar(true)
 CUDA.device!(0)
 
 function meandcr!(qc::ChainBlock, i::Int, st_me, qccr, num_qubits)

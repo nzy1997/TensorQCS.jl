@@ -9,9 +9,13 @@ function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;
 		apply!(reg, eqcz)
 		apply!(reg, eqcz)
 		i%ct ==0 && apply!(reg, qc)
-		# print_state(reg)
+		print_state(reg;atol = 1e-4)
 		push!(erps, error_probabillity(reg,onevec))
-		i%10 ==0 && println("i = $i ")
+		i%10 ==0 && println("i = $i ep = $(erps[end])")
+		if erps[end] > 0.1
+			print_state(reg)
+			error()
+		end
 	end
     return erps
 end
@@ -27,13 +31,7 @@ function error_probabillity(reg::ArrayReg)
 end
 
 function error_probabillity(reg::ArrayReg,onevec::Vector{Bool})
-	if size(reg.state) == (512,1)
-		return sum(abs2.(reg.state[onevec]))
-	end
-	focus!(reg,1:9)
-	ans = sum(abs2.(reg.state[onevec,onevec]))
-	relax!(reg)
-	return ans
+	return sum(abs2.(reg.state[findall(x->x,onevec)]))
 end
 
 function add_rand_pauli(qc::ChainBlock)
@@ -53,11 +51,10 @@ function add_rand_pauli(qc::ChainBlock)
 	return qcr
 end
 
-notzero(x) = !iszero(x)
-function print_state(reg)
+function print_state(reg; atol = 1e-10)
 	println(reg)
 	nq = nqubits(reg)
-	ids = findall(isone, notzero.(reg.state))
+	ids = findall(>(atol), abs2.(reg.state))
 	println("non zero bits: $(length(ids))")
 	for id in ids
 		println("nbatch = $(id.I[2]), bits = $(BitStr{nq}(id.I[1] - 1)), val = $(reg.state[id])")
