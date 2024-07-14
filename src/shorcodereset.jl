@@ -11,7 +11,7 @@ function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;
 		i%ct ==0 && apply!(reg, qc)
 		# print_state(reg)
 		push!(erps, error_probabillity(reg,onevec))
-		i%10 ==0 && print("i = $i ")
+		i%10 ==0 && println("i = $i ")
 	end
     return erps
 end
@@ -23,11 +23,17 @@ end
 
 function error_probabillity(reg::ArrayReg)
 	onevec = [classical_decode(DitStr{2,9}(i)) for i in 0:511]
-	return sum(abs2.(reg.state[onevec]))
+	return error_probabillity(reg,onevec)
 end
 
 function error_probabillity(reg::ArrayReg,onevec::Vector{Bool})
-	return sum(abs2.(reg.state[onevec]))
+	if size(reg.state) == (512,1)
+		return sum(abs2.(reg.state[onevec]))
+	end
+	focus!(reg,1:9)
+	ans = sum(abs2.(reg.state[onevec,onevec]))
+	relax!(reg)
+	return ans
 end
 
 function add_rand_pauli(qc::ChainBlock)

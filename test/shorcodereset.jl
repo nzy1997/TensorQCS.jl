@@ -14,4 +14,5 @@ end
     @test error_probabillity(product_state(bit"000000011")) ≈ 1.0
     @test error_probabillity(product_state(bit"110000000")) ≈ 1.0
     @test error_probabillity(product_state(bit"000000001")) ≈ 0.0
+    @test error_probabillity(product_state(bit"101010110000000001")) ≈ 0.0
 end
