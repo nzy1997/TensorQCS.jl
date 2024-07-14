@@ -1,6 +1,6 @@
 using TensorQCS
-using TensorQEC
-using TensorQCS.Yao
+using TensorQCS.TensorQEC
+using TensorQCS.TensorQEC.Yao
 using DelimitedFiles
 using Random
 using TensorQCS.CUDA
@@ -56,7 +56,7 @@ function reset_shor_circuit(error_rate)
 		meandcr!(qc1, i, st_me, qccr, num_qubits)
 	end
 	push!(qc1, Measure(num_qubits; locs = 10:18, resetto = bit"000000000"))
-	eqc1 = error_quantum_circuit_pair_replace(qc1, pairs)
+	eqc1 = error_quantum_circuit(qc1, pairs)
 	push!(qc, eqc1)
 
 	# X error, Z stabilizers
@@ -67,10 +67,10 @@ function reset_shor_circuit(error_rate)
 		meandcr!(qc2, i, st_me, qccr, num_qubits)
 	end
 	push!(qc2, Measure(num_qubits; locs = 10:18, resetto = bit"000000000"))
-	eqc2 = error_quantum_circuit_pair_replace(qc2, pairs)
+	eqc2 = error_quantum_circuit(qc2, pairs)
 	push!(qc, eqc2)
 	qc3 = chain([put(num_qubits, i => X) for i in 1:9]...)
-	return qc, qcen, vector, error_quantum_circuit_pair_replace(chain(1,X), pairs),error_quantum_circuit_pair_replace(qc3,pairs)
+	return qc, qcen, vector, error_quantum_circuit(chain(1,X), pairs),error_quantum_circuit(qc3,pairs)
 end
 
 function singleX(exqc;iters = 10)
@@ -90,7 +90,7 @@ for error_rate in [1e-5,1e-4,1e-3]
 	for j in 1:2
 		@show j,error_rate
 		qc, qcen, vector,qcx,eqcz = reset_shor_circuit(error_rate)
-		xinfs = singleX(qcx;iters = 500)
+		xinfs = singleX(qcx;iters = 1000)
 		writedlm("examples/data/E($error_rate)Xinfs($j).csv", xinfs)
 		writedlm("examples/data/E($error_rate)vector($j).csv", vector)
 		for ct in [1,10,50,100,2000] 
