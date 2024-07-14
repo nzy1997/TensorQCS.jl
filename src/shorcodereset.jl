@@ -1,15 +1,16 @@
-function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;  iters = 10,use_cuda = false,nshots =10, ct=1)
+function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;  iters = 10,use_cuda = false, ct=1)
 	reg = zero_state(21)
 	use_cuda && (reg = reg |> cu)
 	apply!(reg, subroutine(qcen, 1:9))
 	erps = Vector{Float64}()
+	onevec = [classical_decode(DitStr{2,9}(i)) for i in 0:511]
 	for i in 1:iters
 		# rqc = add_rand_pauli(qc)
 		apply!(reg, eqcz)
 		apply!(reg, eqcz)
 		i%ct ==0 && apply!(reg, qc)
 		# print_state(reg)
-		push!(erps, error_probabillity(reg;nshots))
+		push!(erps, error_probabillity(reg,onevec))
 		i%10 ==0 && print("i = $i ")
 	end
     return erps
@@ -20,9 +21,13 @@ function classical_decode(btc::DitStr{2, 9, Int64})
 	return (sum(btc[1:3])>1) ⊻ (sum(btc[4:6])>1) ⊻ (sum(btc[7:9])>1) 
 end
 
-function error_probabillity(reg::ArrayReg;nshots =10)
-	mc = measure(reg,1:9;nshots)
-	return sum(classical_decode.(mc))/nshots
+function error_probabillity(reg::ArrayReg)
+	onevec = [classical_decode(DitStr{2,9}(i)) for i in 0:511]
+	return sum(abs2.(reg.state[onevec]))
+end
+
+function error_probabillity(reg::ArrayReg,onevec::Vector{Bool})
+	return sum(abs2.(reg.state[onevec]))
 end
 
 function add_rand_pauli(qc::ChainBlock)
