@@ -45,7 +45,7 @@ function reset_shor_circuit()
 	# Z error, X stabilizers
 	qc1 = chain(num_qubits)
 
-	[push!(qc1, control(num_qubits,  i, 9+i => X)) for i in 1:9]
+	[push!(qc1, control(num_qubits,  9+i, i => X)) for i in 1:9]
 	for i in 1:3
 		meandcr!(qc1, i, st_me, qccr, num_qubits)
 	end
@@ -53,7 +53,7 @@ function reset_shor_circuit()
 
 	# X error, Z stabilizers
 	qc2 = chain(num_qubits)
-	[push!(qc2, control(num_qubits, 9+i, i => X)) for i in 1:9]
+	[push!(qc2, control(num_qubits, i, 9+i => X)) for i in 1:9]
 	for i in 4:12
 		meandcr!(qc2, i, st_me, qccr, num_qubits)
 	end
@@ -67,18 +67,19 @@ function error_circuit(error_rate)
 	qc1,qc2,qcx,qcen = reset_shor_circuit()
 	num_qubits = nqubits(qc1)
 	qc = chain(num_qubits)
-	push!(qc, put(21, 18 => H))
+
 	push!(qc, subroutine(qcen, 10:18))
 	eqc1 = error_quantum_circuit(qc1, pairs)
 	push!(qc, eqc1)
 
+	push!(qc, put(21, 18 => H))
 	push!(qc, subroutine(qcen, 10:18))
 	eqc2 = error_quantum_circuit(qc2, pairs)
 	push!(qc, eqc2)
 
 	return qc, qcen, vector, error_quantum_circuit(chain(1,X), pairs),error_quantum_circuit(qcx,pairs)
+	# return qc
 end
-
 
 function singleX(exqc;iters = 10)
 	reg = zero_state(1)
