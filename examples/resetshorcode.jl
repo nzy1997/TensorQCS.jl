@@ -69,14 +69,14 @@ function error_circuit(error_rate)
 	qc = chain(num_qubits)
 	push!(qc, put(21, 18 => H))
 	push!(qc, subroutine(qcen, 10:18))
-	eqc1 = error_quantum_circuit_pair_replace(qc1, pairs)
+	eqc1 = error_quantum_circuit(qc1, pairs)
 	push!(qc, eqc1)
 
 	push!(qc, subroutine(qcen, 10:18))
-	eqc2 = error_quantum_circuit_pair_replace(qc2, pairs)
+	eqc2 = error_quantum_circuit(qc2, pairs)
 	push!(qc, eqc2)
 
-	return qc, qcen, vector, error_quantum_circuit_pair_replace(chain(1,X), pairs),error_quantum_circuit_pair_replace(qcx,pairs)
+	return qc, qcen, vector, error_quantum_circuit(chain(1,X), pairs),error_quantum_circuit(qcx,pairs)
 end
 
 

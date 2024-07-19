@@ -1,21 +1,31 @@
 function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;  iters = 10,use_cuda = false, ct=1)
 	reg = zero_state(21)
 	use_cuda && (reg = reg |> cu)
+
+	reg0 = copy(reg)
 	apply!(reg, subroutine(qcen, 1:9))
 	erps = Vector{Float64}()
+
 	onevec = [classical_decode(DitStr{2,9}(i)) for i in 0:511]
 	for i in 1:iters
 		# rqc = add_rand_pauli(qc)
 		apply!(reg, eqcz)
 		apply!(reg, eqcz)
-		i%ct ==0 && apply!(reg, qc)
+		# i%ct ==0 && apply!(reg, qc)
 		print_state(reg;atol = 1e-4)
 		push!(erps, error_probabillity(reg,onevec))
-		i%10 ==0 && println("i = $i ep = $(erps[end])")
+
+		regt = apply(reg, subroutine(qcen', 1:9))
+		inf = 1 .- fidelity(cpu(regt), cpu(reg0))
+
+		i%10 ==0 && println("i = $i ep = $(erps[end]) inf = $inf")
+		println("i = $i ep = $(erps[end]) inf = $inf")
 		if erps[end] > 0.1
-			print_state(reg)
+			print_state(reg;atol = 1e-4)
 			error()
 		end
+
+
 	end
     return erps
 end
