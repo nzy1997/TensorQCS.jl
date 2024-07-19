@@ -11,8 +11,8 @@ function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;
 		# rqc = add_rand_pauli(qc)
 		apply!(reg, eqcz)
 		apply!(reg, eqcz)
-		# i%ct ==0 && apply!(reg, qc)
-		print_state(reg;atol = 1e-4)
+		i%ct ==0 && apply!(reg, qc)
+		# print_state(reg;atol = 1e-6)
 		push!(erps, error_probabillity(reg,onevec))
 
 		regt = apply(reg, subroutine(qcen', 1:9))
@@ -20,11 +20,6 @@ function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;
 
 		i%10 ==0 && println("i = $i ep = $(erps[end]) inf = $inf")
 		println("i = $i ep = $(erps[end]) inf = $inf")
-		if erps[end] > 0.1
-			print_state(reg;atol = 1e-4)
-			error()
-		end
-
 
 	end
     return erps

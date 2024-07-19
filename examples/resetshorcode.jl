@@ -94,7 +94,7 @@ function singleX(exqc;iters = 10)
 	return erp
 end
 
-for error_rate in [1e-5,1e-4,1e-3]
+for error_rate in [1e-4,1e-3,1e-2]
 	for j in 1:2
 		@show j,error_rate
 		qc, qcen, vector,qcx,eqcz = error_circuit(1e-5)

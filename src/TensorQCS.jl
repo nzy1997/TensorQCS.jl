@@ -1,6 +1,6 @@
 module TensorQCS
 
-using TensorQEC.Yao
+using Yao
 using LinearAlgebra
 using TensorQEC.Yao.YaoBlocks.Optimise
 using CUDA
