@@ -2,7 +2,6 @@ function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;
 	reg = zero_state(21)
 	use_cuda && (reg = reg |> cu)
 
-	reg0 = copy(reg)
 	apply!(reg, subroutine(qcen, 1:9))
 	erps = Vector{Float64}()
 
@@ -12,15 +11,8 @@ function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;
 		apply!(reg, eqcz)
 		apply!(reg, eqcz)
 		i%ct ==0 && apply!(reg, qc)
-		# print_state(reg;atol = 1e-6)
 		push!(erps, error_probabillity(reg,onevec))
-
-		regt = apply(reg, subroutine(qcen', 1:9))
-		inf = 1 .- fidelity(cpu(regt), cpu(reg0))
-
-		i%10 ==0 && println("i = $i ep = $(erps[end]) inf = $inf")
-		println("i = $i ep = $(erps[end]) inf = $inf")
-
+		i%10 ==0 && println("i = $i")
 	end
     return erps
 end

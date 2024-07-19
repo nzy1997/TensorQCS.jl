@@ -5,7 +5,7 @@ using DelimitedFiles
 using Random
 using TensorQCS.CUDA
 using Test
-CUDA.allowscalar(true)
+CUDA.allowscalar(false)
 CUDA.device!(0)
 
 function meandcr!(qc::ChainBlock, i::Int, st_me, qccr, num_qubits)
@@ -95,9 +95,9 @@ function singleX(exqc;iters = 10)
 end
 
 for error_rate in [1e-4,1e-3,1e-2]
-	for j in 1:2
+	for j in 1:4
 		@show j,error_rate
-		qc, qcen, vector,qcx,eqcz = error_circuit(1e-5)
+		qc, qcen, vector,qcx,eqcz = error_circuit(error_rate)
 		xinfs = singleX(qcx;iters = 1000)
 		writedlm("examples/data/E($error_rate)Xinfs($j).csv", xinfs)
 		writedlm("examples/data/E($error_rate)vector($j).csv", vector)
