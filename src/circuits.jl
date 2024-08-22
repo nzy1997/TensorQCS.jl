@@ -105,3 +105,10 @@ function _coherent_error_unitary2(u::AbstractMatrix{T}, error_rate::Real) where 
     q = u * q2
     return Matrix(q), 1 - abs(tr(q'*u)/size(u,1)) 
 end
+
+function reset_shor_code_total()
+	qc1, qc2, qcx, qcen = reset_shor_circuit()
+	qc = chain(21, subroutine(qcen, 10:18), qc1, put(21, 18 => H), subroutine(qcen, 10:18), qc2)
+	qc = simplify(qc; rules = [to_basictypes, Optimise.eliminate_nested])
+	return qc,qcen
+end
