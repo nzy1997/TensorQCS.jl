@@ -14,7 +14,7 @@ export do_circuit_simulation,classical_decode,print_state,error_probabillity
 export reset_shor_circuit,reset_shor_code_total
 
 # threshold
-export double_error_location,check_double_pos
+export double_error_location,check_double_pos,check_triple_pos
 
 include("shorcodereset.jl")
 include("circuits.jl")

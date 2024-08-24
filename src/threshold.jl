@@ -66,6 +66,19 @@ function check_qc(qcen::ChainBlock,qc::ChainBlock,qc_loc::AbstractVector,qubit_l
 	return is_error(qcf, 9)
 end
 
+function check_qc3(qcen::ChainBlock,qc::ChainBlock,qc_loc::AbstractVector,qubit_loc::AbstractVector,egate1,egate2,egate3)
+	qcf = chain(21,subroutine(qcen,1:9),qc[1:qc_loc[1]])
+	[push!(qcf, put(21,i=>egate1)) for i in qubit_loc[1]]
+	 push!(qcf, qc[(qc_loc[1]+1):qc_loc[2]])
+	 [push!(qcf, put(21,i=>egate2)) for i in qubit_loc[2]]
+	 push!(qcf, qc[(qc_loc[2]+1):qc_loc[3]])
+	 [push!(qcf, put(21,i=>egate3)) for i in qubit_loc[3]]
+	 push!(qcf, qc[(qc_loc[3]+1):end])
+	 push!(qcf,qc)
+	 push!(qcf,subroutine(qcen',1:9))
+	 return is_error(qcf, 9)
+ end
+
 function check_double_pos(qcen::ChainBlock, qc::ChainBlock,qc_locs::AbstractVector,qubit_locs::AbstractVector)
 	c = 0
 	tc = 0
@@ -77,6 +90,27 @@ function check_double_pos(qcen::ChainBlock, qc::ChainBlock,qc_locs::AbstractVect
 				if check_qc(qcen,qc,qc_locs[comb],qubit_locs[comb],egate1,egate2) 
 					c += 1
 					@show qc_locs[comb],qubit_locs[comb],egate1,egate2
+				end
+			end
+		end
+		@show comb, c, tc
+	end
+	return c
+end
+
+function check_triple_pos(qcen::ChainBlock, qc::ChainBlock,qc_locs::AbstractVector,qubit_locs::AbstractVector)
+	c = 0
+	tc = 0
+	all_combinations = combinations(1:length(qc_locs), 3)
+	for comb in all_combinations
+		for egate1 in [X,Y,Z]
+			for egate2 in [X,Y,Z]
+				for egate3 in [X,Y,Z]
+					tc += 1
+					if check_qc3(qcen,qc,qc_locs[comb],qubit_locs[comb],egate1,egate2,egate3)
+						c += 1
+						@show qc_locs[comb],qubit_locs[comb],egate1,egate2
+					end
 				end
 			end
 		end
