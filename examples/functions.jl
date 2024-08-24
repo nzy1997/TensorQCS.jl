@@ -1,4 +1,3 @@
-
 function meandcr!(qc::ChainBlock, i::Int, st_me, qccr, num_qubits)
 	qcme = chain(12)
 	TensorQEC.measure_circuit!(qcme, st_me[i], 9 + mod1(i, 3))
