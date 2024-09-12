@@ -1,5 +1,6 @@
 function do_circuit_simulation(qc::ChainBlock,qcen::ChainBlock,eqcz::ChainBlock;  iters = 10,use_cuda = false, ct=1)
-	reg = zero_state(21)
+	num_qubits = nqubits(qc)
+	reg = zero_state(num_qubits)
 	use_cuda && (reg = reg |> cu)
 
 	apply!(reg, subroutine(qcen, 1:9))

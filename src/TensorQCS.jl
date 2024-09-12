@@ -11,7 +11,7 @@ using Combinatorics
 export do_circuit_simulation,classical_decode,print_state,error_probabillity
 
 # circuits
-export reset_shor_circuit,reset_shor_code_total
+export reset_shor_circuit,reset_shor_code_total, reset_shor_circuit_nocopy,error_circuit, error_circuit_nocopy,singleX
 
 # threshold
 export double_error_location,check_double_pos,check_triple_pos
